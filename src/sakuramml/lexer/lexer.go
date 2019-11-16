@@ -22,10 +22,11 @@ func (l *Lexer) HasNext() bool {
     return (l.index < len(l.input))
 }
 
-func (l *Lexer) Split() {
+func (l *Lexer) Split() (token.Tokens, error) {
     for l.HasNext() {
         l.readOne()
     }
+    return l.tokens, nil
 }
 
 func (l *Lexer) Peek() rune {
@@ -158,11 +159,10 @@ func (l *Lexer) appendToken(tt token.TokenType, label string) {
     t := token.Token{Type:tt, Label:label}
     l.tokens = append(l.tokens, &t)
 }
-func Lex(src string) []*token.Token {
+func Lex(src string) ([]*token.Token, error) {
     l := Lexer{}
     l.Init(src)
-    l.Split()
-    return l.tokens
+    return l.Split()
 }
 
 

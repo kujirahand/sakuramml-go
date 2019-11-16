@@ -4,6 +4,7 @@ import (
     "sakuramml/song"
     "sakuramml/lexer"
     "sakuramml/token"
+    "sakuramml/parser"
 )
 
 const (
@@ -17,13 +18,19 @@ type Options struct {
     Outfile string
 }
 
-func Compile(opt *Options) bool {
+func Compile(opt *Options) (*song.Song, error) {
+    // init
     song := song.Song{}
     song.Init()
-    tokens := lexer.Lex(opt.Source)
+    // lex
+    tokens, err := lexer.Lex(opt.Source)
+    if err != nil {
+        return nil, err
+    }
+    parser.Parse(tokens)
     print(song.ToString())
     print(token.TokensToString(tokens))
-    return true
+    return &song, nil
 }
 
 

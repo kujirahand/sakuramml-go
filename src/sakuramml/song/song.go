@@ -1,7 +1,8 @@
-package song 
+package song
 
 import (
     "fmt"
+    "sort"
     "sakuramml/event"
 )
 
@@ -10,6 +11,14 @@ type Event struct {
     Type event.Type
     Data1 int
     Data2 int
+}
+
+func (event *Event) GetDataBytes() []byte {
+    buf := make([]byte, 3)
+    buf[0] = event.Type
+    buf[1] = event.Data1
+    buf[2] = event.Data2
+    return buf
 }
 
 type Track struct {
@@ -23,11 +32,19 @@ type Track struct {
 }
 
 func (track *Track) Init(channel int, timebase int) {
-    track.Events = []*Event {} 
+    track.Events = []*Event {}
     track.Channel = channel
     track.Length = timebase
     track.Qgate = 80
     track.Velocity = 100
+}
+
+func (track *Track) sortEvent() {
+    events := track.Events
+    sort.SliceStable(track.Events,
+        func(i, j int) bool {
+            return events[i].Time < events[j].Time
+        })
 }
 
 func (track *Track) ToString() string {
@@ -60,10 +77,11 @@ func (song *Song) ToString() string {
         track := song.Tracks[i]
         if len(track.Events) == 0 { continue }
         s += fmt.Sprintf("+Track=%d\n", (i + 1))
-        s += track.ToString() 
+        s += track.ToString()
     }
     return s
 }
+
 
 
 

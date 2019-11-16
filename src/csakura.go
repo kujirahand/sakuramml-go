@@ -7,6 +7,7 @@ import (
     "log"
     "io/ioutil"
     "sakuramml/compiler"
+    "sakuramml/midi"
 )
 
 func main() {
@@ -60,7 +61,16 @@ func main() {
     }
     opt.Source = string(text)
     // run
-    compiler.Compile(&opt)
+    song, err := compiler.Compile(&opt)
+    if err != nil {
+        log.Fatal(err)
+    }
+    f, err := os.Create(opt.Outfile)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer f.Close()
+    midi.Save(song, f)
 }
 
 func ShowHeader() {
