@@ -1,23 +1,13 @@
 package token
 
+import (
+    "fmt"
+)
+
 type TokenType string
 
 const (
-    // Lower command
-    CMD_C = "c"
-    CMD_D = "d"
-    CMD_E = "e"
-    CMD_F = "f"
-    CMD_G = "g"
-    CMD_A = "a"
-    CMD_B = "b"
-    CMD_V = "v"
-    CMD_Q = "q"
-    CMD_L = "l"
-    CMD_PROGRAM = "@"
-    // Upper command
-    CMD_TRACK = "Track"
-    CMD_CHANNEL = "Channel"
+    WORD = "word"
 )
 
 type Token struct {
@@ -25,5 +15,14 @@ type Token struct {
     Label   string
 }
 
+type Tokens []*Token
+
+func TokensToString(tokens Tokens) string {
+    s := ""
+    for i, t := range tokens {
+        s += fmt.Sprintf("%3d: %5s %s\n", i, t.Type, t.Label)
+    }
+    return s
+}
 
 

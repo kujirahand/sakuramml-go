@@ -4,6 +4,8 @@ import (
     "os"
     "fmt"
     "regexp"
+    "log"
+    "io/ioutil"
     "sakuramml/compiler"
 )
 
@@ -51,6 +53,12 @@ func main() {
     if opt.Debug {
         fmt.Println("Command line:", opt)
     }
+    // load file
+    text, err := ioutil.ReadFile(opt.Infile)
+    if err != nil {
+        log.Fatal("[ERROR] Fail to load infile: " + opt.Infile)
+    }
+    opt.Source = string(text)
     // run
     compiler.Compile(&opt)
 }
