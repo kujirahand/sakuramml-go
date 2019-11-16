@@ -1,5 +1,5 @@
 # sakuramml-go
-mml compiler sakura by golang
+mml compiler (text music) sakura by golang
 
 テキスト音楽「サクラ」をGo言語で実装しています。
 完全に作成途中です。
