@@ -15,9 +15,9 @@ type Event struct {
 
 func (event *Event) GetDataBytes() []byte {
     buf := make([]byte, 3)
-    buf[0] = event.Type
-    buf[1] = event.Data1
-    buf[2] = event.Data2
+    buf[0] = byte(event.Type)
+    buf[1] = byte(event.Data1)
+    buf[2] = byte(event.Data2)
     return buf
 }
 

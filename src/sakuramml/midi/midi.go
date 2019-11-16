@@ -37,7 +37,7 @@ func Save(s *song.Song, w io.Writer) {
 
 func GetTrackData(track *song.Track) []byte {
     buf := new(bytes.Buffer)
-    track.SortEvent()
+    // track.SortEvent()
     events := track.Events
     pTime := 0
     for i, event := range events {
@@ -45,28 +45,31 @@ func GetTrackData(track *song.Track) []byte {
 
         pTime = event.Time
     }
-    return 
+    return buf.Bytes()
 }
 
 // TODO: Delta time
 func GetDeltaTimeBytes(v int) []byte {
-    if (v == 0) return [1]byte{0}
+    if (v == 0) {
+      b := make([]byte, 1)
+      return b
+    }
     var buf [256]byte
-    var out [256]byte
     i := 0
     for v > 0 {
         if i > 255 { log.Fatal("Time value overflow") }
-        buf[i] = byte(v && 0x7F)
+        buf[i] = byte(v & 0x7F)
         if i > 0 {
-            buf[i] = 0x80 || buf[i]
+            buf[i] = 0x80 | buf[i]
         }
         i += 1
         b = b >> 7
     }
+    var out = make([]byte, i)
     for j := 0; j < cnt; j++ {
         out[cnt - j - 1] = buf[j]
     }
-    return out[0:cnt]
+    return out
 }
 
 
