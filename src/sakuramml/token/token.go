@@ -8,6 +8,8 @@ type TokenType string
 
 const (
     WORD = "word"
+    PAREN_L = "("
+    PAREN_R = ")"
 )
 
 type Token struct {

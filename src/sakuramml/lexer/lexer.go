@@ -2,6 +2,7 @@ package lexer
 
 import (
     "log"
+    "fmt"
     "sakuramml/token"
 )
 
@@ -23,7 +24,7 @@ func (l *Lexer) HasNext() bool {
 
 func (l *Lexer) Split() {
     for l.HasNext() {
-        // fmt.Println(l.index, ":", l.Peek())
+        fmt.Println(l.index, ":", l.Peek())
         l.readOne()
     }
 }
@@ -77,6 +78,7 @@ func (l *Lexer) readWord() string {
         ch := l.Peek()
         if IsUpper(ch) || IsLower(ch) || IsDigit(ch) || ch == rune('_') {
             s += string(ch)
+            l.Next()
         } else {
             break
         }
@@ -88,22 +90,36 @@ func (l *Lexer) readOne() {
     l.SkipSpace()
     ch := l.Peek()
     if ch == rune(0) { return }
+    // lower
     if IsLower(ch) {
         t := token.Token{Type:token.WORD, Label:string(ch)}
         l.tokens = append(l.tokens, &t)
         l.Next()
         return
     }
+    // upper
     if IsUpper(ch) {
         w := l.readWord()
         t := token.Token{Type:token.WORD, Label:w}
         l.tokens = append(l.tokens, &t)
         return
     }
+    // flag
+    switch (ch) {
+    case rune('('):
+        l.appendToken(token.PAREN_L, string(ch))
+        l.Next()
+        return
+    default:
+        //
+    }
     log.Fatal("[ERROR] Unknown word: " + string(ch))
     l.Next()
 }
-
+func (l *Lexer) appendToken(tt token.TokenType, label string) {
+    t := token.Token{Type:tt, Label:label}
+    l.tokens = append(l.tokens, &t)
+}
 func Lex(src string) []*token.Token {
     l := Lexer{}
     l.Init(src)
