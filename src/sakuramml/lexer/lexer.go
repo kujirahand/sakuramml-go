@@ -2,7 +2,7 @@ package lexer
 
 import (
     "log"
-    "fmt"
+    // "fmt"
     "sakuramml/token"
 )
 
@@ -24,7 +24,6 @@ func (l *Lexer) HasNext() bool {
 
 func (l *Lexer) Split() {
     for l.HasNext() {
-        fmt.Println(l.index, ":", l.Peek())
         l.readOne()
     }
 }
@@ -63,20 +62,42 @@ func (l *Lexer) SkipSpace() {
 func IsLower(c rune) bool {
     return rune('a') <= c && c <= rune('z')
 }
+
 func IsUpper(c rune) bool {
     return rune('A') <= c && c <= rune('Z')
 }
+
 func IsDigit(c rune) bool {
     return rune('0') <= c && c <= rune('9')
 }
+
+func IsFlag(c rune) bool {
+    return rune(0x21) <= c && c <= rune(0x2F) ||
+        rune(0x3A) <= c && c <= rune(0x40) ||
+        rune(0x5B) <= c && c<= rune(0x60) ||
+        rune(0x7B) <= c && c <= rune(0x7E)
+}
 func (l *Lexer) readWord() string {
+    if (!IsUpper(l.Peek())) { return "" }
     var s = ""
-    // Upper Char
-    fc := l.Next()
-    if !IsUpper(fc) { return string(fc) }
     for l.HasNext() {
         ch := l.Peek()
         if IsUpper(ch) || IsLower(ch) || IsDigit(ch) || ch == rune('_') {
+            s += string(ch)
+            l.Next()
+        } else {
+            break
+        }
+    }
+    return s
+}
+
+func (l *Lexer) readNumber() string {
+    if !IsDigit(l.Peek()) { return "" }
+    var s = ""
+    for l.HasNext() {
+        ch := l.Peek()
+        if IsDigit(ch) {
             s += string(ch)
             l.Next()
         } else {
@@ -90,27 +111,44 @@ func (l *Lexer) readOne() {
     l.SkipSpace()
     ch := l.Peek()
     if ch == rune(0) { return }
-    // lower
     if IsLower(ch) {
-        t := token.Token{Type:token.WORD, Label:string(ch)}
-        l.tokens = append(l.tokens, &t)
+        l.appendToken(token.WORD, string(ch))
         l.Next()
         return
     }
-    // upper
     if IsUpper(ch) {
         w := l.readWord()
-        t := token.Token{Type:token.WORD, Label:w}
-        l.tokens = append(l.tokens, &t)
+        l.appendToken(token.WORD, w)
         return
     }
-    // flag
+    if IsDigit(ch) {
+        num := l.readNumber()
+        l.appendToken(token.NUMBER, num)
+        return
+    }
     switch (ch) {
     case rune('('):
         l.appendToken(token.PAREN_L, string(ch))
         l.Next()
         return
+    case rune(')'):
+        l.appendToken(token.PAREN_R, string(ch))
+        l.Next()
+        return
+    case rune('['):
+        l.appendToken(token.BRACKET_L, string(ch))
+        l.Next()
+        return
+    case rune(']'):
+        l.appendToken(token.BRACKET_R, string(ch))
+        l.Next()
+        return
     default:
+        if IsFlag(ch) {
+            l.appendToken(token.FLAG, string(ch))
+            l.Next()
+            return
+        }
         //
     }
     log.Fatal("[ERROR] Unknown word: " + string(ch))

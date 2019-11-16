@@ -8,8 +8,12 @@ type TokenType string
 
 const (
     WORD = "word"
+    NUMBER = "number"
+    FLAG = "flag"
     PAREN_L = "("
     PAREN_R = ")"
+    BRACKET_L = "["
+    BRACKET_R = "]"
 )
 
 type Token struct {
