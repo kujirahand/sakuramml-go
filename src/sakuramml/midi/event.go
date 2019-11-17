@@ -1,6 +1,4 @@
-package event
-
-type Type int
+package midi
 
 const (
     NoteOn    = 0x90

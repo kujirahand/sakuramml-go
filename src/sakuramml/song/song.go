@@ -3,12 +3,11 @@ package song
 import (
     "fmt"
     "sort"
-    "sakuramml/event"
 )
 
 type Event struct {
     Time int
-    Type event.Type
+    Type int
     Data1 int
     Data2 int
 }
@@ -32,11 +31,32 @@ type Track struct {
 }
 
 func (track *Track) Init(channel int, timebase int) {
-    track.Events = []*Event {}
+    track.Events = make([]*Event, 0, 256) // Default Event
     track.Channel = channel
     track.Length = timebase
     track.Qgate = 80
     track.Velocity = 100
+}
+
+func (track *Track) addEvent(event *Event) {
+    track.Events = append(track.Events, event)
+}
+
+func (track *Track) AddNoteOn(time, note, vel, lenStep int) {
+    eon  := Event{
+        Time: time, 
+        Type: 0x90 | track.Channel, 
+        Data1: note,
+        Data2: vel,
+    }
+    eoff := Event{
+        Time: time + lenStep, 
+        Type: 0x80 | track.Channel, 
+        Data1: note, 
+        Data2: vel,
+    }
+    track.addEvent(&eon)
+    track.addEvent(&eoff)
 }
 
 func (track *Track) sortEvent() {

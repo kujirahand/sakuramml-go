@@ -2,9 +2,11 @@ package midi
 
 import (
     // "fmt"
+    "os"
     "io"
     "bytes"
     "log"
+    "fmt"
     "encoding/binary"
     "sakuramml/song"
 )
@@ -23,32 +25,61 @@ func GetUint32(v int) []byte {
 
 func Save(s *song.Song, w io.Writer) {
     midiformat := 1
-    // header
+
+    // count track count
+    var trackCount = 0
+    for _, track := range s.Tracks {
+        if len(track.Events) == 0 { continue }
+        trackCount += 1
+    }
+
+    // Write header
     w.Write([]byte("MThd"))
     w.Write(GetUint32(6))
     w.Write(GetUint16(midiformat))
-    w.Write(GetUint16(len(s.Tracks)))
-    // tracks
+    w.Write(GetUint16(trackCount))
+    w.Write(GetUint16(s.Timebase))
+
+    // Write tracks
     for i, track := range s.Tracks {
+        if len(track.Events) == 0 { continue }
+        block := GetTrackData(track)
         // track header
         w.Write([]byte("MTrk"))
+        w.Write(GetUint32(len(block)))
+        w.Write(block)
+        fmt.Println(i, track)
     }
 }
+
+func SaveToFile(sng *song.Song, outfile string) {
+    f, err := os.Create(outfile)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer f.Close()
+    Save(sng, f)
+}
+
 
 func GetTrackData(track *song.Track) []byte {
     buf := new(bytes.Buffer)
     // track.SortEvent()
     events := track.Events
     pTime := 0
-    for i, event := range events {
+    for _, event := range events {
         dtime := event.Time - pTime
-
+        if dtime < 0 { dtime = 0 }
+        buf.Write(GetDeltaTimeBytes(dtime))
+        buf.Write(event.GetDataBytes())
         pTime = event.Time
     }
+    // EOTのイベントを書く
+    buf.Write([]byte{0, 0xFF, 0x2F, 00})
     return buf.Bytes()
 }
 
-// TODO: Delta time
+// Calc Delta time
 func GetDeltaTimeBytes(v int) []byte {
     if (v == 0) {
       b := make([]byte, 1)
@@ -63,11 +94,11 @@ func GetDeltaTimeBytes(v int) []byte {
             buf[i] = 0x80 | buf[i]
         }
         i += 1
-        b = b >> 7
+        v = v >> 7
     }
     var out = make([]byte, i)
-    for j := 0; j < cnt; j++ {
-        out[cnt - j - 1] = buf[j]
+    for j := 0; j < i; j++ {
+        out[i - j - 1] = buf[j]
     }
     return out
 }

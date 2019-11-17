@@ -65,13 +65,11 @@ func main() {
     if err != nil {
         log.Fatal(err)
     }
-    f, err := os.Create(opt.Outfile)
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer f.Close()
-    midi.Save(song, f)
+    // save to file
+    midi.SaveToFile(song, opt.Outfile)
+    fmt.Println("ok.")
 }
+
 
 func ShowHeader() {
     fmt.Println("♪ sakuramml-go " + compiler.VERSION)
