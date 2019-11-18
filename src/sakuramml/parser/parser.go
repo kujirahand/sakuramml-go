@@ -1,9 +1,9 @@
 package parser
 
 import (
-    "sakuramml/token"
+	"sakuramml/token"
 )
 
+// Parse convert to AST
 func Parse(tokens token.Tokens) {
 }
-

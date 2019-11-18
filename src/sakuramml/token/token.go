@@ -1,34 +1,40 @@
 package token
 
 import (
-    "fmt"
+	"fmt"
 )
-
-type TokenType string
 
 const (
-    WORD = "word"
-    NUMBER = "number"
-    FLAG = "flag"
-    PAREN_L = "("
-    PAREN_R = ")"
-    BRACKET_L = "["
-    BRACKET_R = "]"
+	// Word : Token type
+	Word = "word"
+	// Number : Token type
+	Number = "number"
+	// Flag : Token type
+	Flag = "flag"
+	// ParenL : Token type
+	ParenL = "("
+	// ParenR : Token type
+	ParenR = ")"
+	// BracketL : Token type
+	BracketL = "["
+	// BracketR : Token type
+	BracketR = "]"
 )
 
+// Token struct
 type Token struct {
-    Type    TokenType
-    Label   string
+	Type  string
+	Label string
 }
 
-type Tokens []*Token
+// Tokens Slice
+type Tokens []Token
 
+// TokensToString for Debug
 func TokensToString(tokens Tokens) string {
-    s := ""
-    for i, t := range tokens {
-        s += fmt.Sprintf("%3d: %5s %s\n", i, t.Type, t.Label)
-    }
-    return s
+	s := ""
+	for i, t := range tokens {
+		s += fmt.Sprintf("%3d: %5s %s\n", i, t.Type, t.Label)
+	}
+	return s
 }
-
-
