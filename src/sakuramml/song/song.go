@@ -26,23 +26,27 @@ func (event *Event) GetDataBytes() []byte {
 type Track struct {
 	Channel  int
 	Length   int
-	Octave   int
-	Qgate    int
+	Octave   int // step
+	Qgate    int // step
 	Velocity int
-	TimePtr  int
+	Time     int
 	Events   []Event
 }
 
-// Init is initialization of track
-func (track *Track) Init(channel int, timebase int) {
+// NewTrack func
+func NewTrack(channel int, timebase int) *Track {
+	track := Track{}
 	track.Events = make([]Event, 0, 256) // Default Event
 	track.Channel = channel
 	track.Length = timebase
-	track.Qgate = 80
+	track.Qgate = int(float64(timebase) * 0.8)
 	track.Velocity = 100
+	track.Octave = 5
+	return &track
 }
 
-func (track *Track) addEvent(event Event) {
+// AddEvent func
+func (track *Track) AddEvent(event Event) {
 	track.Events = append(track.Events, event)
 }
 
@@ -60,8 +64,8 @@ func (track *Track) AddNoteOn(time, note, vel, lenStep int) {
 		Data1: note,
 		Data2: vel,
 	}
-	track.addEvent(eon)
-	track.addEvent(eoff)
+	track.AddEvent(eon)
+	track.AddEvent(eoff)
 }
 
 // SortEvents sort Events of track
@@ -84,20 +88,48 @@ func (track *Track) ToString() string {
 type Song struct {
 	Timebase int
 	TrackNo  int
+	IValues  []int
 	Tracks   []*Track
 }
 
-// Init is initialization of song
-func (song *Song) Init() {
-	song.Timebase = 96
-	song.Tracks = []*Track{}
+// NewSong func
+func NewSong() *Song {
+	s := Song{}
+	s.Timebase = 96
+	s.Tracks = []*Track{}
 	// create default track
 	for i := 0; i < 16; i++ {
-		track := Track{}
-		track.Init(i, song.Timebase)
-		song.Tracks = append(song.Tracks, &track)
+		track := NewTrack(i, s.Timebase)
+		s.Tracks = append(s.Tracks, track)
 	}
-	song.TrackNo = 0
+	s.TrackNo = 0
+	s.IValues = make([]int, 0, 256)
+	return &s
+}
+
+// PushIValue func
+func (song *Song) PushIValue(v int) {
+	song.IValues = append(song.IValues, v)
+}
+
+// PopIValue func
+func (song *Song) PopIValue() int {
+	ilen := len(song.IValues)
+	if ilen > 0 {
+		v := song.IValues[ilen-1]
+		song.IValues = song.IValues[0 : ilen-1]
+		return v
+	}
+	return 0
+}
+
+// CurTrack func
+func (song *Song) CurTrack() *Track {
+	for song.TrackNo >= len(song.Tracks) {
+		tr := NewTrack(song.TrackNo%16, song.Timebase)
+		song.Tracks = append(song.Tracks, tr)
+	}
+	return song.Tracks[song.TrackNo]
 }
 
 // ToString conver to string

@@ -5,8 +5,7 @@ import (
 )
 
 func TestTrackSortEvents(t *testing.T) {
-	trk := Track{}
-	trk.Init(0, 96)
+	trk := NewTrack(0, 96)
 	trk.AddNoteOn(96, 60, 127, 10)  // on & off
 	trk.AddNoteOn(120, 30, 100, 10) // on & off
 	trk.AddNoteOn(0, 30, 100, 10)   // on & off

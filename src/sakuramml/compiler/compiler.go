@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"fmt"
 	"sakuramml/lexer"
 	"sakuramml/parser"
 	"sakuramml/song"
@@ -23,15 +24,24 @@ type Options struct {
 // Compile MML
 func Compile(opt *Options) (*song.Song, error) {
 	// init
-	song := song.Song{}
-	song.Init()
+	s := song.NewSong()
 	// lex
 	tokens, err := lexer.Lex(opt.Source)
 	if err != nil {
 		return nil, err
 	}
-	parser.Parse(tokens)
-	print(song.ToString())
-	print(token.TokensToString(tokens))
-	return &song, nil
+	fmt.Println(token.TokensToString(tokens, " "))
+	// parse
+	topNode, err := parser.Parse(tokens)
+	if err != nil {
+		return nil, err
+	}
+	// exec
+	curNode := topNode
+	for curNode != nil {
+		curNode.Exec(curNode, s)
+		curNode = curNode.Next
+	}
+	fmt.Println(s.ToString())
+	return s, nil
 }

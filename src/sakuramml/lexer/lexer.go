@@ -19,6 +19,13 @@ func (l *Lexer) Init(src string) {
 	l.tokens = token.Tokens{}
 }
 
+// NewLexer func
+func NewLexer(src string) *Lexer {
+	l := Lexer{}
+	l.Init(src)
+	return &l
+}
+
 // HasNext : Check Next rune
 func (l *Lexer) HasNext() bool {
 	return (l.index < len(l.input))
@@ -112,6 +119,9 @@ func (l *Lexer) readNumber() string {
 		return ""
 	}
 	var s = ""
+	if l.Peek() == rune('$') {
+		s += "0x"
+	}
 	for l.HasNext() {
 		ch := l.Peek()
 		if IsDigit(ch) {
@@ -140,7 +150,7 @@ func (l *Lexer) readOne() {
 		l.appendToken(token.Word, w)
 		return
 	}
-	if IsDigit(ch) {
+	if IsDigit(ch) || ch == rune('$') {
 		num := l.readNumber()
 		l.appendToken(token.Number, num)
 		return
@@ -173,14 +183,12 @@ func (l *Lexer) readOne() {
 	log.Fatal("[ERROR] Unknown word: " + string(ch))
 	l.Next()
 }
-func (l *Lexer) appendToken(tt, label string) {
+func (l *Lexer) appendToken(tt token.TokenType, label string) {
 	t := token.Token{Type: tt, Label: label}
 	l.tokens = append(l.tokens, t)
 }
 
 // Lex : split to tokens
 func Lex(src string) (token.Tokens, error) {
-	l := Lexer{}
-	l.Init(src)
-	return l.Split()
+	return NewLexer(src).Split()
 }
