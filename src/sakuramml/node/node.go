@@ -1,29 +1,72 @@
 package node
 
 import (
+	"fmt"
 	"sakuramml/song"
 	"strconv"
 )
 
 const (
-	// TypeNop const
-	TypeNop = "Nop"
-	// TypeNoteOn const
-	TypeNoteOn = "NoteOn"
-	// TypeTrack const
-	TypeTrack = "Track"
-	// TypeNumber const
-	TypeNumber = "Number"
+	// Nop const
+	Nop = "Nop"
+	// NoteOn const
+	NoteOn = "NoteOn"
+	// Track const
+	Track = "Track"
+	// Number const
+	Number = "Number"
+	// Length const
+	Length = "Length"
+	// LengthDot const
+	LengthDot = "Dot"
+	// SetLength const
+	SetLength = "SetLength"
+	// GetTrackLength const
+	GetTrackLength = "GetTrackLength"
+	// CalcAdd const
+	CalcAdd = "CalcAdd"
+	// CalcMul const
+	CalcMul = "CalcMul"
+	// NLenToStep const
+	NLenToStep = "NLenToStep"
 )
+
+// NType type
+type NType string
 
 // Node struct
 type Node struct {
-	Type   string
+	Type   NType
 	Next   *Node
 	Exec   func(n *Node, s *song.Song)
 	IValue int
 	SValue string
+	NValue *Node
 	ExData interface{}
+}
+
+func nodeToStringN(n *Node, level int) string {
+	s := ""
+	i := n
+	for i != nil {
+		// indent
+		tab := ""
+		for j := 0; j < level; j++ {
+			tab += "|  "
+		}
+		///fmt.Printf(tab+"%d %v\n", level, *i)
+		s += tab + string(i.Type) + "\n"
+		if i.NValue != nil {
+			s += nodeToStringN(i.NValue, level+1)
+		}
+		i = i.Next
+	}
+	return s
+}
+
+// ToStringAll func
+func (n *Node) ToStringAll() string {
+	return nodeToStringN(n, 0)
 }
 
 // ExDataNode strcut
@@ -31,10 +74,17 @@ type ExDataNode struct {
 	Value *Node
 }
 
+// NewNode func
+func NewNode(nodeType NType) *Node {
+	n := Node{Type: nodeType, Exec: execNop}
+	n.Next = nil
+	n.NValue = nil
+	return &n
+}
+
 // NewNop func
 func NewNop() *Node {
-	n := Node{Type: TypeNop, Next: nil, Exec: execNop}
-	return &n
+	return NewNode(Nop)
 }
 func execNop(n *Node, s *song.Song) {
 	// nop
@@ -42,9 +92,10 @@ func execNop(n *Node, s *song.Song) {
 
 // NewNoteOn func
 func NewNoteOn(note string) *Node {
-	n := Node{Type: TypeNoteOn, Next: nil, Exec: execNoteOn}
+	n := NewNode(NoteOn)
+	n.Exec = execNoteOn
 	n.SValue = note
-	return &n
+	return n
 }
 
 func execNoteOn(n *Node, s *song.Song) {
@@ -75,9 +126,10 @@ func NewNumber(s string) *Node {
 		base = 16
 	}
 	iv, _ := strconv.ParseInt(s, base, 0)
-	n := Node{Type: TypeNumber, Next: nil, Exec: execPushIValue}
+	n := NewNode(Number)
+	n.Exec = execPushIValue
 	n.IValue = int(iv)
-	return &n
+	return n
 }
 
 func execPushIValue(n *Node, s *song.Song) {
@@ -86,9 +138,10 @@ func execPushIValue(n *Node, s *song.Song) {
 
 // NewTrack func
 func NewTrack(v *Node) *Node {
-	n := Node{Type: TypeTrack, Exec: execTrack}
+	n := NewNode(Track)
+	n.Exec = execTrack
 	n.ExData = ExDataNode{Value: v}
-	return &n
+	return n
 }
 
 func execTrack(n *Node, s *song.Song) {
@@ -97,4 +150,137 @@ func execTrack(n *Node, s *song.Song) {
 	ex.Value.Exec(n, s)
 	// Change Current TrackNo
 	s.TrackNo = s.PopIValue()
+}
+
+// NewLength func
+func NewLength() *Node {
+	n := NewNode(Length)
+	n.Exec = execLength
+	return n
+}
+
+func execLength(n *Node, s *song.Song) {
+	// calc length
+	length := 0
+	nvalue := n.NValue
+	i := 0
+	for nvalue != nil {
+		if nvalue.Type == Nop {
+			nvalue = nvalue.Next
+			continue
+		}
+		if s.Debug {
+			fmt.Printf("%d, %s\n", i, nvalue.Type)
+		}
+		nvalue.Exec(nvalue, s)
+		iv := s.PopIValue()
+		length += iv
+		nvalue = nvalue.Next
+		i++
+		if i > 10 {
+			break
+		}
+	}
+	s.PushIValue(length)
+}
+
+// NewSetLength func
+func NewSetLength(lenNode *Node) *Node {
+	n := NewNode(SetLength)
+	n.NValue = lenNode
+	n.Exec = execSetLength
+	return n
+}
+
+func execSetLength(n *Node, s *song.Song) {
+	n.NValue.Exec(n, s)
+	ilen := s.PopIValue()
+	if s.Debug {
+		println("execSetLength=", ilen)
+	}
+	s.CurTrack().Length = ilen
+}
+
+// NewGetTrackLength func
+func NewGetTrackLength() *Node {
+	n := NewNode(GetTrackLength)
+	n.Exec = execGetTrackLength
+	return n
+}
+
+func execGetTrackLength(n *Node, s *song.Song) {
+	s.PushIValue(s.CurTrack().Length)
+}
+
+// NewLengthDot func
+func NewLengthDot(nLen *Node) *Node {
+	n := NewNode(LengthDot)
+	n.Exec = execLenDot
+	n.NValue = nLen
+	n.ExData = 1.5
+	return n
+}
+
+func execLenDot(n *Node, s *song.Song) {
+	rate := n.ExData.(float64)
+	n.Next.Exec(n, s)
+	iv := s.PopIValue()
+	vv := int(float64(iv) * rate)
+	s.PushIValue(vv)
+}
+
+// NewCalcAdd func
+func NewCalcAdd(lnode, rnode *Node) *Node {
+	n := NewNode(CalcAdd)
+	n.Exec = execCalcAdd
+	n.ExData = []*Node{lnode, rnode}
+	return n
+}
+
+func execCalcAdd(n *Node, s *song.Song) {
+	ex := n.ExData.([]*Node)
+	lnode, rnode := ex[0], ex[1]
+	rnode.Exec(n, s)
+	rvalue := s.PopIValue()
+	lnode.Exec(n, s)
+	lvalue := s.PopIValue()
+	vv := rvalue + lvalue
+	s.PushIValue(vv)
+}
+
+// NewCalcMul func
+func NewCalcMul(lnode, rnode *Node) *Node {
+	n := NewNode(CalcMul)
+	n.Exec = execCalcMul
+	n.ExData = []*Node{lnode, rnode}
+	return n
+}
+
+func execCalcMul(n *Node, s *song.Song) {
+	ex := n.ExData.([]*Node)
+	lnode, rnode := ex[0], ex[1]
+	rnode.Exec(n, s)
+	rvalue := s.PopIValue()
+	lnode.Exec(n, s)
+	lvalue := s.PopIValue()
+	vv := rvalue * lvalue
+	s.PushIValue(vv)
+}
+
+// NewNLenToStep func
+func NewNLenToStep(valueNode *Node) *Node {
+	n := NewNode(NLenToStep)
+	n.Exec = execNLenToStep
+	n.NValue = valueNode
+	return n
+}
+
+func execNLenToStep(n *Node, s *song.Song) {
+	// get n value
+	nValue := n.NValue
+	nValue.Exec(nValue, s)
+	v := s.PopIValue()
+	// convert to step
+	vStep := int((4.0 / float64(v)) * float64(s.Timebase))
+	s.PushIValue(vStep)
 }

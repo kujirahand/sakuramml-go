@@ -88,13 +88,15 @@ func (track *Track) ToString() string {
 type Song struct {
 	Timebase int
 	TrackNo  int
-	IValues  []int
+	Stack    []interface{}
 	Tracks   []*Track
+	Debug    bool
 }
 
 // NewSong func
 func NewSong() *Song {
 	s := Song{}
+	s.Debug = false
 	s.Timebase = 96
 	s.Tracks = []*Track{}
 	// create default track
@@ -103,24 +105,49 @@ func NewSong() *Song {
 		s.Tracks = append(s.Tracks, track)
 	}
 	s.TrackNo = 0
-	s.IValues = make([]int, 0, 256)
+	s.Stack = make([]interface{}, 0, 256)
 	return &s
+}
+
+// PopStack func
+func (song *Song) PopStack() interface{} {
+	ilen := len(song.Stack)
+	if ilen > 0 {
+		iv := song.Stack[ilen-1]
+		song.Stack = song.Stack[0 : ilen-1]
+		return iv
+	}
+	return nil
 }
 
 // PushIValue func
 func (song *Song) PushIValue(v int) {
-	song.IValues = append(song.IValues, v)
+	song.Stack = append(song.Stack, v)
 }
 
 // PopIValue func
 func (song *Song) PopIValue() int {
-	ilen := len(song.IValues)
-	if ilen > 0 {
-		v := song.IValues[ilen-1]
-		song.IValues = song.IValues[0 : ilen-1]
-		return v
+	v := song.PopStack()
+	switch v.(type) {
+	case int:
+		return v.(int)
 	}
 	return 0
+}
+
+// PushSValue func
+func (song *Song) PushSValue(v string) {
+	song.Stack = append(song.Stack, v)
+}
+
+// PopSValue func
+func (song *Song) PopSValue() string {
+	v := song.PopStack()
+	switch v.(type) {
+	case string:
+		return v.(string)
+	}
+	return ""
 }
 
 // CurTrack func

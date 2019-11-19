@@ -36,12 +36,12 @@ func (p *Parser) appendNode(n *node.Node) {
 	p.Last = n
 }
 
-func (p *Parser) readNote(t *token.Token) *node.Node {
+func (p *Parser) readNote(t *token.Token) (*node.Node, error) {
 	n := node.NewNoteOn(t.Label)
-	return n
+	return n, nil
 }
 
-func (p *Parser) readValue() *node.Node {
+func (p *Parser) readValue() (*node.Node, error) {
 	if p.desk.IsLabel("=") {
 		p.desk.Next()
 	}
@@ -49,17 +49,79 @@ func (p *Parser) readValue() *node.Node {
 	if p.desk.IsType(token.Number) {
 		nn := node.NewNumber(ct.Label)
 		p.desk.Next()
-		return nn
+		return nn, nil
 	}
-	panic("not implement")
+	return nil, fmt.Errorf("not implement : %s", ct.Label)
 }
 
-func (p *Parser) readTrack() *node.Node {
-	no := p.readValue()
-	return node.NewTrack(no)
+func (p *Parser) readTrack() (*node.Node, error) {
+	no, err := p.readValue()
+	if err != nil {
+		return nil, fmt.Errorf("Track : TrackNo invalid")
+	}
+	return node.NewTrack(no), nil
 }
 
-func (p *Parser) readWord() *node.Node {
+func (p *Parser) readLength() (*node.Node, error) {
+	nTop := node.NewNop()
+	nLast := nTop
+	loopc := 0
+	for p.desk.HasNext() {
+		// Number or Base(TrackLength)
+		nNum := node.NewGetTrackLength()
+		if p.desk.IsType(token.Number) {
+			nValue, _ := p.readValue()
+			nNum = node.NewNLenToStep(nValue)
+		}
+		res := nNum
+		// Dot
+		dotCount := 0
+		dotRate := 1.0
+		dotSum := 1.0
+		for p.desk.IsLabel(".") {
+			p.desk.Next()
+			dotCount++
+			dotRate = dotRate / 2.0
+			dotSum += dotRate
+		}
+		if dotCount > 0 {
+			nDot := node.NewLengthDot(nNum)
+			nDot.ExData = dotSum
+			res = nDot
+		}
+		nLast.Next = res
+		nLast = nLast.Next
+		print("loop=", loopc, "\n", nLast.ToStringAll(), "\n")
+		loopc++
+		// Next
+		if p.desk.IsLabel("^") {
+			p.desk.Next()
+			continue
+		}
+		break
+	}
+	if nTop == nLast {
+		return node.NewGetTrackLength(), nil
+	}
+	print("@@@\n")
+	fmt.Println(nTop.ToStringAll())
+	nodeLength := node.NewLength()
+	nodeLength.NValue = nTop
+	return nodeLength, nil
+}
+
+func (p *Parser) readSetLength() (*node.Node, error) {
+	if !p.desk.IsType(token.Number) {
+		return nil, fmt.Errorf("l command need number")
+	}
+	nodeLength, err := p.readLength()
+	if err != nil {
+		return nil, err
+	}
+	return node.NewSetLength(nodeLength), nil
+}
+
+func (p *Parser) readWord() (*node.Node, error) {
 	t := p.desk.Next()
 	switch t.Label {
 	case "c":
@@ -76,22 +138,29 @@ func (p *Parser) readWord() *node.Node {
 		return p.readNote(t)
 	case "b":
 		return p.readNote(t)
+	case "l":
+		return p.readSetLength()
 	case "TR":
 		return p.readTrack()
 	}
-	return nil
+	return nil, fmt.Errorf("Unknown Word : %s", t.Label)
 }
 
 // Parse func
 func (p *Parser) Parse() (*node.Node, error) {
+	var e error
 	for p.desk.HasNext() {
 		t := p.desk.Peek()
 		fmt.Printf("Parse %s\n", t.Label)
 		if t.Type == token.Word {
-			p.appendNode(p.readWord())
+			nn, err := p.readWord()
+			if err != nil {
+				return nil, err
+			}
+			p.appendNode(nn)
 			continue
 		}
-		e := fmt.Errorf("[ERROR] (%d) not implements : %s ", p.desk.Peek().Line, p.desk.Peek().Label)
+		e = fmt.Errorf("[ERROR] (%d) not implements : %s ", p.desk.Peek().Line, p.desk.Peek().Label)
 		return p.Top, e
 	}
 	return p.Top, nil
