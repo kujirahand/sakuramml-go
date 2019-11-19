@@ -3,6 +3,7 @@ package song
 import (
 	"fmt"
 	"sort"
+	"strconv"
 )
 
 // Event is Basic MIDI Event
@@ -148,6 +149,53 @@ func (song *Song) PopSValue() string {
 		return v.(string)
 	}
 	return ""
+}
+
+// TimePtrToStr func
+func (song *Song) TimePtrToStr(time int) string {
+	l1 := song.Timebase * 4
+	l4 := song.Timebase * 1
+	meas := int(time / l1)
+	beat := ((time - meas*l1) / l4)
+	step := time % l4
+	return fmt.Sprintf("%3d:%2d:%3d", meas, beat+1, step)
+}
+
+// StepToN lの逆引き
+func (song *Song) StepToN(length int) string {
+	tb := song.Timebase
+	l1 := tb * 4
+	if length > l1 {
+		// 全音符より大きい場合
+		nx := length / l1
+		s := ""
+		for i := 0; i < nx; i++ {
+			s += "^"
+		}
+		res := "1" + s
+		nm1 := length % l1
+		if nm1 > 0 {
+			res += "^" + song.StepToN(nm1)
+		}
+		return res
+	}
+	nd := l1 / length
+	nm := l1 % length
+	if nm == 0 {
+		return strconv.Itoa(nd)
+	}
+	// 付点音符
+	switch length {
+	case int(float64(l1) / 2 * 1.5):
+		return "2."
+	case int(float64(l1) / 4 * 1.5):
+		return "4."
+	case int(float64(l1) / 8 * 1.5):
+		return "8."
+	case int(float64(l1) / 16 * 1.5):
+		return "16."
+	}
+	return fmt.Sprintf("%%%d", length)
 }
 
 // CurTrack func

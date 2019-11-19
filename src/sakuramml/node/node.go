@@ -11,8 +11,10 @@ const (
 	Nop = "Nop"
 	// NoteOn const
 	NoteOn = "NoteOn"
-	// Track const
-	Track = "Track"
+	// SetTrack const
+	SetTrack = "SetTrack"
+	// SetOctave const
+	SetOctave = "SetOctave"
 	// Number const
 	Number = "Number"
 	// Length const
@@ -55,7 +57,14 @@ func nodeToStringN(n *Node, level int) string {
 			tab += "|  "
 		}
 		///fmt.Printf(tab+"%d %v\n", level, *i)
-		s += tab + string(i.Type) + "\n"
+		params := ""
+		switch i.Type {
+		case NoteOn:
+			params = i.SValue
+		case Number:
+			params = fmt.Sprintf("%d", i.IValue)
+		}
+		s += tab + string(i.Type) + " " + params + "\n"
 		if i.NValue != nil {
 			s += nodeToStringN(i.NValue, level+1)
 		}
@@ -76,7 +85,8 @@ type ExDataNode struct {
 
 // ExDataNoteOn struct
 type ExDataNoteOn struct {
-	Length *Node
+	NoteShift int
+	Length    *Node
 }
 
 // NewNode func
@@ -95,11 +105,17 @@ func execNop(n *Node, s *song.Song) {
 	// nop
 }
 
-// NewNoteOn func
+// NewNoteOn func (NoteOn and Rest)
 func NewNoteOn(note string, ex *ExDataNoteOn) *Node {
+	// detect note no
+	notemap := map[string]int{
+		"c": 0, "d": 2, "e": 4, "f": 5, "g": 7, "a": 9, "b": 11, "r": -1,
+	}
+	// new
 	n := NewNode(NoteOn)
 	n.Exec = execNoteOn
 	n.SValue = note
+	n.IValue = notemap[note]
 	n.ExData = ex
 	return n
 }
@@ -116,16 +132,26 @@ func execNoteOn(n *Node, s *song.Song) {
 		ex.Length.Exec(ex.Length, s)
 		length = s.PopIValue()
 	}
-	if n.SValue == "n" {
+	// rest or note
+	if n.SValue == "r" {
+		if s.Debug {
+			nls := s.StepToN(length)
+			fmt.Printf("- Time(%s) l%-2s r \n", s.TimePtrToStr(track.Time), nls)
+		}
+	} else if n.SValue == "n" {
 		// todo "n"
 	} else {
-		notemap := map[string]int{"c": 0, "d": 2, "e": 4, "f": 5, "g": 7, "a": 9, "b": 11}
-		noteno = track.Octave*12 + notemap[n.SValue]
+		// calc note shift
+		noteno = track.Octave*12 + n.IValue + ex.NoteShift
 		if s.Debug {
-			print("- note:", noteno, ",%", length, "\n")
+			notemap2 := []string{"c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b"}
+			nls := s.StepToN(length)
+			fmt.Printf(
+				"- Time(%s) l%-2s o%d v%-3d q%%%-3d %-3s \n",
+				s.TimePtrToStr(track.Time), nls, int(noteno/12), velocity, qgate, notemap2[noteno%12])
 		}
+		track.AddNoteOn(track.Time, noteno, velocity, qgate)
 	}
-	track.AddNoteOn(track.Time, noteno, velocity, qgate)
 	track.Time += length
 }
 
@@ -149,20 +175,34 @@ func execPushIValue(n *Node, s *song.Song) {
 	s.PushIValue(n.IValue)
 }
 
-// NewTrack func
-func NewTrack(v *Node) *Node {
-	n := NewNode(Track)
-	n.Exec = execTrack
-	n.ExData = ExDataNode{Value: v}
+// NewSetTrack func
+func NewSetTrack(v *Node) *Node {
+	n := NewNode(SetTrack)
+	n.Exec = execSetTrack
+	n.NValue = v
 	return n
 }
 
-func execTrack(n *Node, s *song.Song) {
+func execSetTrack(n *Node, s *song.Song) {
 	// get track no
-	ex := n.ExData.(ExDataNode)
-	ex.Value.Exec(n, s)
+	n.NValue.Exec(n.NValue, s)
 	// Change Current TrackNo
 	s.TrackNo = s.PopIValue()
+}
+
+// NewSetOctave func
+func NewSetOctave(v *Node) *Node {
+	n := NewNode(SetOctave)
+	n.Exec = execSetOctave
+	n.NValue = v
+	return n
+}
+
+func execSetOctave(n *Node, s *song.Song) {
+	// get track no
+	n.NValue.Exec(n.NValue, s)
+	// Change Current TrackNo
+	s.CurTrack().Octave = s.PopIValue()
 }
 
 // NewLength func
@@ -182,9 +222,7 @@ func execLength(n *Node, s *song.Song) {
 			nvalue = nvalue.Next
 			continue
 		}
-		if s.Debug {
-			fmt.Printf("%d, %s\n", i, nvalue.Type)
-		}
+		// if s.Debug { fmt.Printf("%d, %s\n", i, nvalue.Type) }
 		nvalue.Exec(nvalue, s)
 		iv := s.PopIValue()
 		length += iv

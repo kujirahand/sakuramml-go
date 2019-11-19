@@ -36,7 +36,35 @@ func (p *Parser) appendNode(n *node.Node) {
 	p.Last = n
 }
 
-func (p *Parser) readNote(t *token.Token) (*node.Node, error) {
+func (p *Parser) readNoteOn(t *token.Token) (*node.Node, error) {
+	ex := node.ExDataNoteOn{}
+	n := node.NewNoteOn(t.Label, &ex)
+	// sharp or flat
+	for {
+		if p.desk.IsLabel("+") || p.desk.IsLabel("#") || p.desk.IsLabel("♯") {
+			ex.NoteShift++
+			p.desk.Next()
+			continue
+		}
+		if p.desk.IsLabel("-") || p.desk.IsLabel("♭") {
+			ex.NoteShift--
+			p.desk.Next()
+			continue
+		}
+		break
+	}
+	// length ?
+	if p.desk.IsType(token.Number) || p.desk.IsLabel("^") {
+		nLen, err := p.readLength()
+		if err != nil {
+			return n, err
+		}
+		ex.Length = nLen
+	}
+	return n, nil
+}
+
+func (p *Parser) readRest(t *token.Token) (*node.Node, error) {
 	ex := node.ExDataNoteOn{}
 	n := node.NewNoteOn(t.Label, &ex)
 	// length ?
@@ -68,7 +96,15 @@ func (p *Parser) readTrack() (*node.Node, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Track : TrackNo invalid")
 	}
-	return node.NewTrack(no), nil
+	return node.NewSetTrack(no), nil
+}
+
+func (p *Parser) readSetOctave() (*node.Node, error) {
+	no, err := p.readValue()
+	if err != nil {
+		return nil, fmt.Errorf("o : Octave value invalid")
+	}
+	return node.NewSetOctave(no), nil
 }
 
 func (p *Parser) readLength() (*node.Node, error) {
@@ -133,23 +169,28 @@ func (p *Parser) readSetLength() (*node.Node, error) {
 func (p *Parser) readWord() (*node.Node, error) {
 	t := p.desk.Next()
 	switch t.Label {
-	case "c":
-		return p.readNote(t)
-	case "d":
-		return p.readNote(t)
-	case "e":
-		return p.readNote(t)
-	case "f":
-		return p.readNote(t)
-	case "g":
-		return p.readNote(t)
-	case "a":
-		return p.readNote(t)
-	case "b":
-		return p.readNote(t)
+	case "c", "ド":
+		return p.readNoteOn(t)
+	case "d", "レ":
+		return p.readNoteOn(t)
+	case "e", "ミ":
+		return p.readNoteOn(t)
+	case "f", "フ":
+		return p.readNoteOn(t)
+	case "g", "ソ":
+		return p.readNoteOn(t)
+	case "a", "ラ":
+		return p.readNoteOn(t)
+	case "b", "シ":
+		return p.readNoteOn(t)
+	case "r", "ン", "ッ":
+		t.Label = "r"
+		return p.readRest(t)
 	case "l":
 		return p.readSetLength()
-	case "TR":
+	case "o":
+		return p.readSetOctave()
+	case "TR", "Track":
 		return p.readTrack()
 	}
 	return nil, fmt.Errorf("Unknown Word : %s", t.Label)

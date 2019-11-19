@@ -35,7 +35,9 @@ func Compile(opt *Options) (*song.Song, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(token.TokensToString(tokens, " "))
+	if opt.Debug {
+		fmt.Println(token.TokensToString(tokens, " "))
+	}
 	// parse
 	if opt.Debug {
 		fmt.Println("--- parse ---")
@@ -53,9 +55,7 @@ func Compile(opt *Options) (*song.Song, error) {
 	}
 	curNode := topNode
 	for curNode != nil {
-		if opt.Debug {
-			fmt.Println(curNode.Type)
-		}
+		// if opt.Debug { fmt.Println(curNode.Type) }
 		curNode.Exec(curNode, s)
 		curNode = curNode.Next
 	}

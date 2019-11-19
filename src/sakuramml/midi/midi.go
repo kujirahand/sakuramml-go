@@ -4,7 +4,6 @@ import (
 	// "fmt"
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -46,7 +45,7 @@ func Save(s *song.Song, w io.Writer) {
 	w.Write(GetUint16(s.Timebase))
 
 	// Write tracks
-	for i, track := range s.Tracks {
+	for _, track := range s.Tracks {
 		if len(track.Events) == 0 {
 			continue
 		}
@@ -55,7 +54,7 @@ func Save(s *song.Song, w io.Writer) {
 		w.Write([]byte("MTrk"))
 		w.Write(GetUint32(len(block)))
 		w.Write(block)
-		fmt.Println(i, track)
+		// fmt.Println(i, track)
 	}
 }
 
