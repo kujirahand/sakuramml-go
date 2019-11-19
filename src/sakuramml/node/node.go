@@ -235,9 +235,13 @@ func NewSetOctave(v *Node, opt string) *Node {
 }
 
 func execSetOctave(n *Node, s *song.Song) {
-	n.NValue.Exec(n.NValue, s)
 	tr := s.CurTrack()
-	tr.Octave = calcFlagValue(tr.Octave, s.PopIValue(), n.SValue)
+	no := 0
+	if n.NValue != nil {
+		n.NValue.Exec(n.NValue, s)
+		no = s.PopIValue()
+	}
+	tr.Octave = calcFlagValue(tr.Octave, no, n.SValue)
 	if tr.Octave > 10 {
 		tr.Octave = 10
 	}

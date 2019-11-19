@@ -257,6 +257,19 @@ func (p *Parser) readWord() (*node.Node, error) {
 	return nil, fmt.Errorf("Unknown Word : %s", t.Label)
 }
 
+func (p *Parser) readFlag() (*node.Node, error) {
+	t := p.desk.Next()
+	switch t.Label {
+	case ">", "↑":
+		return node.NewSetOctave(nil, "++"), nil
+	case "<", "↓":
+		return node.NewSetOctave(nil, "--"), nil
+	case "@":
+		return p.readVoice(t)
+	}
+	return nil, fmt.Errorf("Unknown Word : %s", t.Label)
+}
+
 // Parse func
 func (p *Parser) Parse() (*node.Node, error) {
 	var e error
@@ -264,6 +277,14 @@ func (p *Parser) Parse() (*node.Node, error) {
 		t := p.desk.Peek()
 		if t.Type == token.Word {
 			nn, err := p.readWord()
+			if err != nil {
+				return nil, err
+			}
+			p.appendNode(nn)
+			continue
+		}
+		if t.Type == token.Flag {
+			nn, err := p.readFlag()
 			if err != nil {
 				return nil, err
 			}
