@@ -74,6 +74,11 @@ type ExDataNode struct {
 	Value *Node
 }
 
+// ExDataNoteOn struct
+type ExDataNoteOn struct {
+	Length *Node
+}
+
 // NewNode func
 func NewNode(nodeType NType) *Node {
 	n := Node{Type: nodeType, Exec: execNop}
@@ -91,10 +96,11 @@ func execNop(n *Node, s *song.Song) {
 }
 
 // NewNoteOn func
-func NewNoteOn(note string) *Node {
+func NewNoteOn(note string, ex *ExDataNoteOn) *Node {
 	n := NewNode(NoteOn)
 	n.Exec = execNoteOn
 	n.SValue = note
+	n.ExData = ex
 	return n
 }
 
@@ -104,13 +110,20 @@ func execNoteOn(n *Node, s *song.Song) {
 	velocity := track.Velocity
 	qgate := track.Qgate
 	length := track.Length
+	// Temporary change?
+	ex := n.ExData.(*ExDataNoteOn)
+	if ex.Length != nil {
+		ex.Length.Exec(ex.Length, s)
+		length = s.PopIValue()
+	}
 	if n.SValue == "n" {
 		// todo "n"
 	} else {
 		notemap := map[string]int{"c": 0, "d": 2, "e": 4, "f": 5, "g": 7, "a": 9, "b": 11}
 		noteno = track.Octave*12 + notemap[n.SValue]
-		print("octave:", track.Octave, "\n")
-		print("note:", noteno, "\n")
+		if s.Debug {
+			print("- note:", noteno, ",%", length, "\n")
+		}
 	}
 	track.AddNoteOn(track.Time, noteno, velocity, qgate)
 	track.Time += length
@@ -195,9 +208,7 @@ func NewSetLength(lenNode *Node) *Node {
 func execSetLength(n *Node, s *song.Song) {
 	n.NValue.Exec(n, s)
 	ilen := s.PopIValue()
-	if s.Debug {
-		println("execSetLength=", ilen)
-	}
+	// println("execSetLength=", ilen)
 	s.CurTrack().Length = ilen
 }
 
@@ -217,16 +228,19 @@ func NewLengthDot(nLen *Node) *Node {
 	n := NewNode(LengthDot)
 	n.Exec = execLenDot
 	n.NValue = nLen
-	n.ExData = 1.5
+	n.ExData = float64(1.5)
 	return n
 }
 
 func execLenDot(n *Node, s *song.Song) {
 	rate := n.ExData.(float64)
-	n.Next.Exec(n, s)
+	// get number
+	n.NValue.Exec(n.NValue, s)
 	iv := s.PopIValue()
+	// calc len
 	vv := int(float64(iv) * rate)
 	s.PushIValue(vv)
+	// println("dot=", iv, rate, vv)
 }
 
 // NewCalcAdd func

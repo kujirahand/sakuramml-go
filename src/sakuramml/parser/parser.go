@@ -37,7 +37,16 @@ func (p *Parser) appendNode(n *node.Node) {
 }
 
 func (p *Parser) readNote(t *token.Token) (*node.Node, error) {
-	n := node.NewNoteOn(t.Label)
+	ex := node.ExDataNoteOn{}
+	n := node.NewNoteOn(t.Label, &ex)
+	// length ?
+	if p.desk.IsType(token.Number) || p.desk.IsLabel("^") {
+		nLen, err := p.readLength()
+		if err != nil {
+			return n, err
+		}
+		ex.Length = nLen
+	}
 	return n, nil
 }
 
@@ -86,12 +95,12 @@ func (p *Parser) readLength() (*node.Node, error) {
 		}
 		if dotCount > 0 {
 			nDot := node.NewLengthDot(nNum)
-			nDot.ExData = dotSum
+			nDot.ExData = float64(dotSum)
 			res = nDot
 		}
 		nLast.Next = res
 		nLast = nLast.Next
-		print("loop=", loopc, "\n", nLast.ToStringAll(), "\n")
+		// print("loop=", loopc, "\n", nLast.ToStringAll(), "\n")
 		loopc++
 		// Next
 		if p.desk.IsLabel("^") {
@@ -103,8 +112,8 @@ func (p *Parser) readLength() (*node.Node, error) {
 	if nTop == nLast {
 		return node.NewGetTrackLength(), nil
 	}
-	print("@@@\n")
-	fmt.Println(nTop.ToStringAll())
+	// print("@@@\n")
+	// fmt.Println(nTop.ToStringAll())
 	nodeLength := node.NewLength()
 	nodeLength.NValue = nTop
 	return nodeLength, nil
@@ -151,7 +160,6 @@ func (p *Parser) Parse() (*node.Node, error) {
 	var e error
 	for p.desk.HasNext() {
 		t := p.desk.Peek()
-		fmt.Printf("Parse %s\n", t.Label)
 		if t.Type == token.Word {
 			nn, err := p.readWord()
 			if err != nil {
