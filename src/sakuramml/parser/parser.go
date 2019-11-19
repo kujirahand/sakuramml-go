@@ -119,6 +119,8 @@ func (p *Parser) read1pCmd(t *token.Token, ntype node.NType) (*node.Node, error)
 		return node.NewSetQgate(no, opt), nil
 	case node.SetVelocity:
 		return node.NewSetVelocity(no, opt), nil
+	case node.SetTempo:
+		return node.NewSetTempo(no, opt), nil
 	default:
 		return nil, fmt.Errorf("System Error : No command : %s", ntype)
 	}
@@ -249,6 +251,8 @@ func (p *Parser) readWord() (*node.Node, error) {
 		return p.readVoice(t)
 	case "TR", "Track":
 		return p.read1pCmd(t, node.SetTrack)
+	case "Tempo":
+		return p.read1pCmd(t, node.SetTempo)
 	}
 	return nil, fmt.Errorf("Unknown Word : %s", t.Label)
 }

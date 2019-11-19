@@ -14,6 +14,8 @@ const (
 	NoteOn = "NoteOn"
 	// SetTrack const
 	SetTrack = "SetTrack"
+	// SetTempo const
+	SetTempo = "SetTempo"
 	// SetOctave const
 	SetOctave = "SetOctave"
 	// SetQgate const
@@ -286,6 +288,23 @@ func execSetQgate(n *Node, s *song.Song) {
 	if tr.Qgate < 1 {
 		tr.Qgate = 1
 	}
+}
+
+// NewSetTempo func
+func NewSetTempo(v *Node, opt string) *Node {
+	n := NewNode(SetTempo)
+	n.Exec = execSetTempo
+	n.SValue = opt
+	n.NValue = v
+	return n
+}
+
+func execSetTempo(n *Node, s *song.Song) {
+	n.NValue.Exec(n.NValue, s)
+	s.Tempo = calcFlagValue(s.Tempo, s.PopIValue(), n.SValue)
+	s.Tempo = utils.InRange(10, s.Tempo, 1500)
+	trk := s.CurTrack()
+	trk.AddTempo(trk.Time, s.Tempo)
 }
 
 // ExDataPC for SetPC

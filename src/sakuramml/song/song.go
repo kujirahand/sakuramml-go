@@ -87,6 +87,25 @@ func (track *Track) AddProgramChange(time, value int) {
 	track.AddEvent(pc)
 }
 
+// AddTempo func
+func (track *Track) AddTempo(time, tempo int) {
+	e := event.Event{
+		Time:      time,
+		ByteCount: 6,
+		Type:      event.Tempo,
+	}
+	mpq := uint32(60000000 / tempo)
+	e.ExData = []byte{
+		0xFF,
+		0x51,
+		0x03,
+		byte(mpq >> 16 & 0xff),
+		byte(mpq >> 8 & 0xff),
+		byte(mpq & 0xff),
+	}
+	track.AddEvent(e)
+}
+
 // SortEvents sort Events of track
 func (track *Track) SortEvents() {
 	events := track.Events
@@ -106,6 +125,7 @@ func (track *Track) ToString() string {
 // Song is info of song, include tracks
 type Song struct {
 	Timebase int
+	Tempo    int
 	TrackNo  int
 	Stack    []interface{}
 	Tracks   []*Track
@@ -123,6 +143,7 @@ func NewSong() *Song {
 		track := NewTrack(i, s.Timebase)
 		s.Tracks = append(s.Tracks, track)
 	}
+	s.Tempo = 120 // default Tempo (but not write)
 	s.TrackNo = 0
 	s.Stack = make([]interface{}, 0, 256)
 	return &s

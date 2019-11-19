@@ -22,3 +22,13 @@ func MidiRange(v int) int {
 	}
 	return v
 }
+
+// InRange func
+func InRange(min, v, max int) int {
+	if min > v {
+		v = min
+	} else if v > max {
+		v = max
+	}
+	return v
+}

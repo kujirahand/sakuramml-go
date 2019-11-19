@@ -15,6 +15,8 @@ const (
 	ChPress = 0xD0
 	// PitchBend = PitchBend Event
 	PitchBend = 0xE0
+	// Tempo = (Meta Event)
+	Tempo = 0xFF51
 )
 
 // Event is Basic MIDI Event
@@ -24,12 +26,18 @@ type Event struct {
 	Type      int
 	Data1     int
 	Data2     int
+	ExData    []byte
 }
 
 // GetDataBytes gets data bytes
 func (event *Event) GetDataBytes() []byte {
 	// copy to buf
 	buf := make([]byte, event.ByteCount)
+	// meta event ?
+	if event.Type >= 0xFF {
+		return event.ExData
+	}
+	// normal event
 	buf[0] = byte(event.Type)
 	buf[1] = byte(event.Data1)
 	if event.ByteCount >= 3 {
