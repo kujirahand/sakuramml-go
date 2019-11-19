@@ -2,26 +2,10 @@ package song
 
 import (
 	"fmt"
+	"sakuramml/event"
 	"sort"
 	"strconv"
 )
-
-// Event is Basic MIDI Event
-type Event struct {
-	Time  int
-	Type  int
-	Data1 int
-	Data2 int
-}
-
-// GetDataBytes gets data bytes
-func (event *Event) GetDataBytes() []byte {
-	buf := make([]byte, 3)
-	buf[0] = byte(event.Type)
-	buf[1] = byte(event.Data1)
-	buf[2] = byte(event.Data2)
-	return buf
-}
 
 const (
 	// QgateModeStep for QGateMode
@@ -39,13 +23,13 @@ type Track struct {
 	QgateMode string // step or rate
 	Velocity  int
 	Time      int
-	Events    []Event
+	Events    []event.Event
 }
 
 // NewTrack func
 func NewTrack(channel int, timebase int) *Track {
 	track := Track{}
-	track.Events = make([]Event, 0, 256) // Default Event
+	track.Events = make([]event.Event, 0, 256) // Default Event
 	track.Channel = channel
 	track.Length = timebase
 	track.Qgate = 80
@@ -56,26 +40,51 @@ func NewTrack(channel int, timebase int) *Track {
 }
 
 // AddEvent func
-func (track *Track) AddEvent(event Event) {
+func (track *Track) AddEvent(event event.Event) {
 	track.Events = append(track.Events, event)
 }
 
 // AddNoteOn add NoteOn event to track
 func (track *Track) AddNoteOn(time, note, vel, lenStep int) {
-	eon := Event{
-		Time:  time,
-		Type:  0x90 | track.Channel,
-		Data1: note,
-		Data2: vel,
+	eon := event.Event{
+		Time:      time,
+		ByteCount: 3,
+		Type:      event.NoteOn | track.Channel,
+		Data1:     note,
+		Data2:     vel,
 	}
-	eoff := Event{
-		Time:  time + lenStep,
-		Type:  0x80 | track.Channel,
-		Data1: note,
-		Data2: vel,
+	eoff := event.Event{
+		Time:      time + lenStep,
+		ByteCount: 3,
+		Type:      event.NoteOff | track.Channel,
+		Data1:     note,
+		Data2:     vel,
 	}
 	track.AddEvent(eon)
 	track.AddEvent(eoff)
+}
+
+// AddCC Add Controll Change
+func (track *Track) AddCC(time, no, value int) {
+	cc := event.Event{
+		Time:      time,
+		ByteCount: 3,
+		Type:      event.CC | track.Channel,
+		Data1:     no,
+		Data2:     value,
+	}
+	track.AddEvent(cc)
+}
+
+// AddProgramChange Add Controll Change
+func (track *Track) AddProgramChange(time, value int) {
+	pc := event.Event{
+		Time:      time,
+		ByteCount: 2,
+		Type:      event.ProgramChange | track.Channel,
+		Data1:     value,
+	}
+	track.AddEvent(pc)
 }
 
 // SortEvents sort Events of track

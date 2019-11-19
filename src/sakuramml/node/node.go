@@ -3,6 +3,7 @@ package node
 import (
 	"fmt"
 	"sakuramml/song"
+	"sakuramml/utils"
 	"strconv"
 )
 
@@ -19,6 +20,8 @@ const (
 	SetQgate = "SetQgate"
 	// SetVelocity const
 	SetVelocity = "SetVelocity"
+	// SetPC const
+	SetPC = "@"
 	// Number const
 	Number = "Number"
 	// Length const
@@ -282,6 +285,45 @@ func execSetQgate(n *Node, s *song.Song) {
 	}
 	if tr.Qgate < 1 {
 		tr.Qgate = 1
+	}
+}
+
+// ExDataPC for SetPC
+type ExDataPC struct {
+	MSB int
+	LSB int
+}
+
+// NewSetPC func
+func NewSetPC(v *Node, msb, lsb int) *Node {
+	n := NewNode(SetPC)
+	n.Exec = execSetPC
+	n.NValue = v
+	n.ExData = ExDataPC{MSB: msb, LSB: lsb}
+	return n
+}
+
+func execSetPC(n *Node, s *song.Song) {
+	// track
+	tr := s.CurTrack()
+	// value
+	n.NValue.Exec(n.NValue, s)
+	no := utils.MidiRange(s.PopIValue() - 1)
+	// write msb lsb
+	ex := n.ExData.(ExDataPC)
+	if ex.MSB >= 0 {
+		tr.AddCC(tr.Time, 0, ex.MSB)
+	}
+	if ex.LSB >= 0 {
+		tr.AddCC(tr.Time, 32, ex.LSB)
+	}
+	// write pc
+	tr.AddProgramChange(tr.Time, no)
+	//
+	if s.Debug {
+		fmt.Printf(
+			"- Time(%s) TR=%-2d @%d,%d, %d\n",
+			s.TimePtrToStr(tr.Time), s.TrackNo, no+1, ex.MSB, ex.LSB)
 	}
 }
 

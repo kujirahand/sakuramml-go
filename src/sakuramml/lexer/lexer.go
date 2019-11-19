@@ -156,6 +156,10 @@ func (l *Lexer) readOne() {
 		return
 	}
 	switch ch {
+	case rune('@'): // Voice
+		l.appendToken(token.Word, string(ch))
+		l.Next()
+		return
 	case rune('('):
 		l.appendToken(token.ParenL, string(ch))
 		l.Next()

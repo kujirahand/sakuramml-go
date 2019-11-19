@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sakuramml/node"
 	"sakuramml/token"
+	"sakuramml/utils"
+	"strconv"
 )
 
 // Parser struct
@@ -122,6 +124,42 @@ func (p *Parser) read1pCmd(t *token.Token, ntype node.NType) (*node.Node, error)
 	}
 }
 
+func (p *Parser) readVoice(t *token.Token) (*node.Node, error) {
+	// read param
+	if p.desk.IsLabel("(") { // skip ParenR
+		p.desk.Next()
+	}
+	no, err := p.readValue()
+	if err != nil {
+		return nil, fmt.Errorf("%s no invalid", t.Label)
+	}
+	// fix no
+	msb := -1
+	lsb := -1
+	// msb
+	if p.desk.IsLabel(",") {
+		p.desk.Next()
+		if !p.desk.IsType(token.Number) {
+			return nil, fmt.Errorf("%s MSB no invalid should be number", t.Label)
+		}
+		msb, _ = strconv.Atoi(p.desk.Next().Label)
+		msb = utils.MidiRange(msb)
+		if p.desk.IsLabel(",") {
+			p.desk.Next()
+			if !p.desk.IsType(token.Number) {
+				return nil, fmt.Errorf("%s MSB,LSB no invalid should be number", t.Label)
+			}
+			lsb, _ = strconv.Atoi(p.desk.Next().Label)
+			lsb = utils.MidiRange(lsb)
+		}
+	}
+	if p.desk.IsLabel(")") { // skip ParenR
+		p.desk.Next()
+	}
+	nVoice := node.NewSetPC(no, msb, lsb)
+	return nVoice, nil
+}
+
 func (p *Parser) readLength() (*node.Node, error) {
 	nTop := node.NewNop()
 	nLast := nTop
@@ -207,6 +245,8 @@ func (p *Parser) readWord() (*node.Node, error) {
 		return p.read1pCmd(t, node.SetOctave)
 	case "v":
 		return p.read1pCmd(t, node.SetVelocity)
+	case "@", "Voice", "VOICE":
+		return p.readVoice(t)
 	case "TR", "Track":
 		return p.read1pCmd(t, node.SetTrack)
 	}
