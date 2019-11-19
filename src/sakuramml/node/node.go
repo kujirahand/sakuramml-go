@@ -15,6 +15,10 @@ const (
 	SetTrack = "SetTrack"
 	// SetOctave const
 	SetOctave = "SetOctave"
+	// SetQgate const
+	SetQgate = "SetQgate"
+	// SetVelocity const
+	SetVelocity = "SetVelocity"
 	// Number const
 	Number = "Number"
 	// Length const
@@ -123,14 +127,20 @@ func NewNoteOn(note string, ex *ExDataNoteOn) *Node {
 func execNoteOn(n *Node, s *song.Song) {
 	track := s.CurTrack()
 	noteno := 0
-	velocity := track.Velocity
-	qgate := track.Qgate
 	length := track.Length
+	qgate := track.Qgate
+	qgatemode := track.QgateMode
+	velocity := track.Velocity
 	// Temporary change?
 	ex := n.ExData.(*ExDataNoteOn)
 	if ex.Length != nil {
 		ex.Length.Exec(ex.Length, s)
 		length = s.PopIValue()
+	}
+	// calc
+	qlen := qgate
+	if qgatemode == song.QgateModeRate {
+		qlen = int(float64(length) * float64(qgate) / 100)
 	}
 	// rest or note
 	if n.SValue == "r" {
@@ -147,10 +157,10 @@ func execNoteOn(n *Node, s *song.Song) {
 			notemap2 := []string{"c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b"}
 			nls := s.StepToN(length)
 			fmt.Printf(
-				"- Time(%s) l%-2s o%d v%-3d q%%%-3d %-3s \n",
-				s.TimePtrToStr(track.Time), nls, int(noteno/12), velocity, qgate, notemap2[noteno%12])
+				"- Time(%s) TR=%-2d l%-2s o%d v%-3d q%%%-3d %-3s \n",
+				s.TimePtrToStr(track.Time), s.TrackNo, nls, int(noteno/12), velocity, qlen, notemap2[noteno%12])
 		}
-		track.AddNoteOn(track.Time, noteno, velocity, qgate)
+		track.AddNoteOn(track.Time, noteno, velocity, qlen)
 	}
 	track.Time += length
 }
@@ -176,33 +186,103 @@ func execPushIValue(n *Node, s *song.Song) {
 }
 
 // NewSetTrack func
-func NewSetTrack(v *Node) *Node {
+func NewSetTrack(v *Node, opt string) *Node {
 	n := NewNode(SetTrack)
 	n.Exec = execSetTrack
+	n.SValue = opt
 	n.NValue = v
 	return n
 }
-
 func execSetTrack(n *Node, s *song.Song) {
 	// get track no
 	n.NValue.Exec(n.NValue, s)
-	// Change Current TrackNo
-	s.TrackNo = s.PopIValue()
+	// set new value
+	s.TrackNo = calcFlagValue(s.TrackNo, s.PopIValue(), n.SValue)
+}
+
+func calcFlagValue(cur, no int, opt string) int {
+	res := cur
+	switch opt {
+	case "+":
+		res += no
+	case "-":
+		res -= no
+	case "++":
+		res++
+	case "--":
+		res--
+	default:
+		res = no
+	}
+	if res < 0 {
+		res = 0
+	}
+	return res
 }
 
 // NewSetOctave func
-func NewSetOctave(v *Node) *Node {
+func NewSetOctave(v *Node, opt string) *Node {
 	n := NewNode(SetOctave)
 	n.Exec = execSetOctave
+	n.SValue = opt
 	n.NValue = v
 	return n
 }
 
 func execSetOctave(n *Node, s *song.Song) {
-	// get track no
 	n.NValue.Exec(n.NValue, s)
-	// Change Current TrackNo
-	s.CurTrack().Octave = s.PopIValue()
+	tr := s.CurTrack()
+	tr.Octave = calcFlagValue(tr.Octave, s.PopIValue(), n.SValue)
+	if tr.Octave > 10 {
+		tr.Octave = 10
+	}
+}
+
+// NewSetVelocity func
+func NewSetVelocity(v *Node, opt string) *Node {
+	n := NewNode(SetVelocity)
+	n.Exec = execSetVelocity
+	n.SValue = opt
+	n.NValue = v
+	return n
+}
+
+func execSetVelocity(n *Node, s *song.Song) {
+	n.NValue.Exec(n.NValue, s)
+	tr := s.CurTrack()
+	tr.Velocity = calcFlagValue(tr.Velocity, s.PopIValue(), n.SValue)
+	if tr.Velocity > 127 {
+		tr.Velocity = 127
+	}
+}
+
+// NewSetQgate func
+func NewSetQgate(v *Node, opt string) *Node {
+	n := NewNode(SetQgate)
+	n.Exec = execSetQgate
+	n.SValue = opt
+	n.NValue = v
+	return n
+}
+
+func execSetQgate(n *Node, s *song.Song) {
+	n.NValue.Exec(n.NValue, s)
+	tr := s.CurTrack()
+	opt := n.SValue
+	// set Qgate
+	if opt[0] == '%' {
+		// Direct Value
+		opt = opt[1:]
+		tr.Qgate = calcFlagValue(tr.Qgate, s.PopIValue(), opt)
+		tr.QgateMode = song.QgateModeStep
+	} else {
+		// Percent Value
+		tr.Qgate = calcFlagValue(tr.Qgate, s.PopIValue(), opt)
+		tr.QgateMode = song.QgateModeRate
+	}
+	if tr.Qgate < 1 {
+		tr.Qgate = 1
+	}
 }
 
 // NewLength func

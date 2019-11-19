@@ -23,15 +23,23 @@ func (event *Event) GetDataBytes() []byte {
 	return buf
 }
 
+const (
+	// QgateModeStep for QGateMode
+	QgateModeStep = "step"
+	// QgateModeRate for QGateMode
+	QgateModeRate = "rate"
+)
+
 // Track is info of track
 type Track struct {
-	Channel  int
-	Length   int
-	Octave   int // step
-	Qgate    int // step
-	Velocity int
-	Time     int
-	Events   []Event
+	Channel   int
+	Length    int // step
+	Octave    int
+	Qgate     int    // ref: QgateMode
+	QgateMode string // step or rate
+	Velocity  int
+	Time      int
+	Events    []Event
 }
 
 // NewTrack func
@@ -40,7 +48,8 @@ func NewTrack(channel int, timebase int) *Track {
 	track.Events = make([]Event, 0, 256) // Default Event
 	track.Channel = channel
 	track.Length = timebase
-	track.Qgate = int(float64(timebase) * 0.8)
+	track.Qgate = 80
+	track.QgateMode = QgateModeRate
 	track.Velocity = 100
 	track.Octave = 5
 	return &track

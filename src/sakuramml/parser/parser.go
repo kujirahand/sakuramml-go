@@ -91,20 +91,35 @@ func (p *Parser) readValue() (*node.Node, error) {
 	return nil, fmt.Errorf("not implement : %s", ct.Label)
 }
 
-func (p *Parser) readTrack() (*node.Node, error) {
+func (p *Parser) read1pCmd(t *token.Token, ntype node.NType) (*node.Node, error) {
+	opt := ""
+	for p.desk.IsLabel("%") || p.desk.IsLabel("+") || p.desk.IsLabel("-") {
+		opt += p.desk.Next().Label
+	}
+	// read param
+	if p.desk.IsLabel("(") { // skip ParenR
+		p.desk.Next()
+	}
 	no, err := p.readValue()
 	if err != nil {
-		return nil, fmt.Errorf("Track : TrackNo invalid")
+		return nil, fmt.Errorf("%s : %s value invalid", t.Label, ntype)
 	}
-	return node.NewSetTrack(no), nil
-}
-
-func (p *Parser) readSetOctave() (*node.Node, error) {
-	no, err := p.readValue()
-	if err != nil {
-		return nil, fmt.Errorf("o : Octave value invalid")
+	if p.desk.IsLabel(")") { // skip ParenR
+		p.desk.Next()
 	}
-	return node.NewSetOctave(no), nil
+	// process command
+	switch ntype {
+	case node.SetTrack:
+		return node.NewSetTrack(no, opt), nil
+	case node.SetOctave:
+		return node.NewSetOctave(no, opt), nil
+	case node.SetQgate:
+		return node.NewSetQgate(no, opt), nil
+	case node.SetVelocity:
+		return node.NewSetVelocity(no, opt), nil
+	default:
+		return nil, fmt.Errorf("System Error : No command : %s", ntype)
+	}
 }
 
 func (p *Parser) readLength() (*node.Node, error) {
@@ -189,9 +204,11 @@ func (p *Parser) readWord() (*node.Node, error) {
 	case "l":
 		return p.readSetLength()
 	case "o":
-		return p.readSetOctave()
+		return p.read1pCmd(t, node.SetOctave)
+	case "v":
+		return p.read1pCmd(t, node.SetVelocity)
 	case "TR", "Track":
-		return p.readTrack()
+		return p.read1pCmd(t, node.SetTrack)
 	}
 	return nil, fmt.Errorf("Unknown Word : %s", t.Label)
 }
