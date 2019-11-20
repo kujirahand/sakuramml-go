@@ -50,6 +50,8 @@ func (p *Parser) readWord() (*node.Node, error) {
 		return p.read1pCmd(t, node.SetOctave)
 	case "v":
 		return p.read1pCmd(t, node.SetVelocity)
+	case "p":
+		return p.read1pCmd(t, node.SetPitchBend)
 	case "@", "Voice", "VOICE":
 		return p.readVoice(t)
 	case "TR", "Track":
@@ -67,7 +69,7 @@ func (p *Parser) readWord() (*node.Node, error) {
 	case ":":
 		return p.readLoopBreak()
 	}
-	return nil, fmt.Errorf("Unknown Word : %s", t.Label)
+	return nil, fmt.Errorf("[Error] (%d) Unknown Word : %s", t.Line, t.Label)
 }
 
 // Parse func
@@ -212,6 +214,8 @@ func (p *Parser) read1pCmd(t *token.Token, ntype node.NType) (*node.Node, error)
 		return node.NewSetVelocity(no, opt), nil
 	case node.SetTempo:
 		return node.NewSetTempo(no, opt), nil
+	case node.SetPitchBend:
+		return node.NewSetPitchBend(no, opt), nil
 	default:
 		return nil, fmt.Errorf("System Error : No command : %s", ntype)
 	}

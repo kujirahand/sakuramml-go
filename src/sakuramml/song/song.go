@@ -24,6 +24,7 @@ type Track struct {
 	QgateMode string // step or rate
 	Velocity  int
 	Time      int
+	PitchBend int
 	Events    []event.Event
 }
 
@@ -37,6 +38,7 @@ func NewTrack(channel int, timebase int) *Track {
 	track.QgateMode = QgateModeRate
 	track.Velocity = 100
 	track.Octave = 5
+	track.PitchBend = 0
 	return &track
 }
 
@@ -111,8 +113,8 @@ func (track *Track) AddPitchBend(time, value int) *event.Event {
 }
 
 // AddPitchBendEx func ... p command / 簡易ピッチベンドを書き込む(0~63~127の範囲)
-func (track *Track) AddPitchBendEx(time, value int) *event.Event {
-	v := value * 64
+func (track *Track) AddPitchBendEasy(time, value int) *event.Event {
+	v := value * 128 - 8192
 	return track.AddPitchBend(time, v)
 }
 
@@ -181,12 +183,12 @@ type LoopItem struct {
 
 // Song is info of song, include tracks
 type Song struct {
+	Debug     bool
 	Timebase  int
 	Tempo     int
 	TrackNo   int
 	Stack     []interface{} // values stack
 	Tracks    []*Track
-	Debug     bool
 	LoopStack []*LoopItem
 	MoveNode  interface{} // Node
 }

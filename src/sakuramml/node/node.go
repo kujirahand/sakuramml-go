@@ -26,6 +26,8 @@ const (
 	SetVelocity = "SetVelocity"
 	// SetPC const
 	SetPC = "@"
+	// SetPitchBend const
+	SetPitchBend = "SetPitchBend"
 	// Number const
 	Number = "Number"
 	// Length const
@@ -348,6 +350,32 @@ func execSetTempo(n *Node, s *song.Song) {
 	s.Tempo = utils.InRange(10, s.Tempo, 1500)
 	trk := s.CurTrack()
 	trk.AddTempo(trk.Time, s.Tempo)
+}
+
+// NewSetPitchBend func
+func NewSetPitchBend(v *Node, opt string) *Node {
+	n := NewNode(SetPitchBend)
+	n.Exec = execSetPitchBend
+	n.SValue = opt
+	n.NValue = v
+	return n
+}
+
+func execSetPitchBend(n *Node, s *song.Song) {
+	tr := s.CurTrack()
+	n.NValue.Exec(n.NValue, s)
+	opt := n.SValue
+	// PitchBend Mode
+	if len(opt) > 0 && opt[0] == '%' { // normal mode
+		opt = opt[1:]
+		tr.PitchBend = calcFlagValue(tr.PitchBend, s.PopIValue(), opt)
+		tr.PitchBend = utils.InRange(-8192, tr.PitchBend, 8191)
+		tr.AddPitchBend(tr.Time, tr.PitchBend)
+	} else { // easy mode
+		pb := calcFlagValue(tr.PitchBend, s.PopIValue(), opt)
+		pb = utils.InRange(0, pb, 127)
+		tr.AddPitchBendEasy(tr.Time, tr.PitchBend)
+	}
 }
 
 // ExDataPC for SetPC

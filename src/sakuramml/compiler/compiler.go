@@ -26,8 +26,8 @@ type Options struct {
 // Compile MML
 func Compile(opt *Options) (*song.Song, error) {
 	// init
-	songV := song.NewSong()
-	songV.Debug = opt.Debug
+	songObj := song.NewSong()
+	songObj.Debug = opt.Debug
 	// lex
 	if opt.Debug {
 		fmt.Println("--- lex ---")
@@ -57,14 +57,14 @@ func Compile(opt *Options) (*song.Song, error) {
 	curNode := topNode
 	for curNode != nil {
 		// if opt.Debug { fmt.Println(curNode.Type) }
-		curNode.Exec(curNode, songV)
-		if songV.MoveNode != nil {
-			curNode = songV.MoveNode.(*node.Node)
-			songV.MoveNode = nil
+		curNode.Exec(curNode, songObj)
+		if songObj.MoveNode != nil {
+			curNode = songObj.MoveNode.(*node.Node)
+			songObj.MoveNode = nil
 			continue
 		}
 		curNode = curNode.Next
 	}
 	// fmt.Println(s.ToString())
-	return songV, nil
+	return songObj, nil
 }
