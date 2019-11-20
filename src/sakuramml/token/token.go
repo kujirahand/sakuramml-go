@@ -16,10 +16,6 @@ const (
 	ParenL = "("
 	// ParenR : Token type
 	ParenR = ")"
-	// BracketL : Token type
-	BracketL = "["
-	// BracketR : Token type
-	BracketR = "]"
 )
 
 // Token struct

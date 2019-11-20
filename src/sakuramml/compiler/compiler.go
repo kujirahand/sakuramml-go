@@ -3,6 +3,7 @@ package compiler
 import (
 	"fmt"
 	"sakuramml/lexer"
+	"sakuramml/node"
 	"sakuramml/parser"
 	"sakuramml/song"
 	"sakuramml/token"
@@ -25,8 +26,8 @@ type Options struct {
 // Compile MML
 func Compile(opt *Options) (*song.Song, error) {
 	// init
-	s := song.NewSong()
-	s.Debug = opt.Debug
+	songV := song.NewSong()
+	songV.Debug = opt.Debug
 	// lex
 	if opt.Debug {
 		fmt.Println("--- lex ---")
@@ -56,9 +57,14 @@ func Compile(opt *Options) (*song.Song, error) {
 	curNode := topNode
 	for curNode != nil {
 		// if opt.Debug { fmt.Println(curNode.Type) }
-		curNode.Exec(curNode, s)
+		curNode.Exec(curNode, songV)
+		if songV.MoveNode != nil {
+			curNode = songV.MoveNode.(*node.Node)
+			songV.MoveNode = nil
+			continue
+		}
 		curNode = curNode.Next
 	}
 	// fmt.Println(s.ToString())
-	return s, nil
+	return songV, nil
 }

@@ -1,7 +1,6 @@
 package lexer
 
 import (
-	"fmt"
 	"log"
 	"sakuramml/token"
 )
@@ -214,7 +213,7 @@ func (l *Lexer) readOne() {
 	if ch == rune(0) {
 		return
 	}
-	fmt.Printf("ch=%s, %d\n", string(ch), int(ch))
+	// fmt.Printf("ch=%s, %d\n", string(ch), int(ch))
 	// line comment ?
 	if ch == rune('/') {
 		// embed line comment
@@ -265,14 +264,6 @@ func (l *Lexer) readOne() {
 		return
 	case rune(')'):
 		l.appendToken(token.ParenR, string(ch))
-		l.Next()
-		return
-	case rune('['):
-		l.appendToken(token.BracketL, string(ch))
-		l.Next()
-		return
-	case rune(']'):
-		l.appendToken(token.BracketR, string(ch))
 		l.Next()
 		return
 	default:

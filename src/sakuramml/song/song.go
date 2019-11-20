@@ -171,14 +171,24 @@ func (track *Track) ToString() string {
 	return s
 }
 
+// LoopItem struct
+type LoopItem struct {
+	Index     int
+	Count     int
+	BeginNode interface{} // Node
+	EndNode	  interface{} // Node
+}
+
 // Song is info of song, include tracks
 type Song struct {
-	Timebase int
-	Tempo    int
-	TrackNo  int
-	Stack    []interface{}
-	Tracks   []*Track
-	Debug    bool
+	Timebase  int
+	Tempo     int
+	TrackNo   int
+	Stack     []interface{} // values stack
+	Tracks    []*Track
+	Debug     bool
+	LoopStack []*LoopItem
+	MoveNode  interface{} // Node
 }
 
 // NewSong func
@@ -195,6 +205,7 @@ func NewSong() *Song {
 	s.Tempo = 120 // default Tempo (but not write)
 	s.TrackNo = 0
 	s.Stack = make([]interface{}, 0, 256)
+	s.MoveNode = nil
 	return &s
 }
 
@@ -237,6 +248,29 @@ func (song *Song) PopSValue() string {
 		return v.(string)
 	}
 	return ""
+}
+
+// PushLoop func
+func (song *Song) PushLoop(item *LoopItem) {
+	song.LoopStack = append(song.LoopStack, item)
+}
+
+// PopLoop func
+func (song *Song) PopLoop() {
+	ilen := len(song.LoopStack)
+	if ilen > 0 {
+		song.LoopStack = song.LoopStack[0 : ilen-1]
+		return
+	}
+}
+
+// PeekLoop func
+func (song *Song) PeekLoop() *LoopItem {
+	ilen := len(song.LoopStack)
+	if ilen > 0 {
+		return song.LoopStack[ilen - 1]
+	}
+	return nil
 }
 
 // TimePtrToStr func

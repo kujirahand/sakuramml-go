@@ -9,7 +9,7 @@ import (
 
 const (
 	// Nop const
-	Nop = "Nop"
+	Nop NType = "Nop"
 	// Comment const
 	Comment = "Comment"
 	// NoteOn const
@@ -42,6 +42,12 @@ const (
 	CalcMul = "CalcMul"
 	// NLenToStep const
 	NLenToStep = "NLenToStep"
+	// LoopBegin const
+	LoopBegin = "LoopBegin"
+	// LoopEnd const
+	LoopEnd = "LoopEnd"
+	// LoopBreak const
+	LoopBreak = "LoopBreak"
 )
 
 // NType type
@@ -208,6 +214,14 @@ func NewNumber(s string) *Node {
 	n := NewNode(Number)
 	n.Exec = execPushIValue
 	n.IValue = int(iv)
+	return n
+}
+
+// NewNumberInt func
+func NewNumberInt(no int) *Node {
+	n := NewNode(Number)
+	n.Exec = execPushIValue
+	n.IValue = no
 	return n
 }
 
@@ -505,4 +519,70 @@ func execNLenToStep(n *Node, s *song.Song) {
 	// convert to step
 	vStep := int((4.0 / float64(v)) * float64(s.Timebase))
 	s.PushIValue(vStep)
+}
+
+// NewLoopBegin func
+func NewLoopBegin(loopValue *Node) *Node {
+	n := NewNode(LoopBegin)
+	n.Exec = execLoopBegin
+	n.NValue = loopValue
+	return n
+}
+
+func execLoopBegin(n *Node, s *song.Song) {
+	loopValue := n.NValue
+	loopValue.Exec(loopValue, s)
+	loopCount := s.PopIValue()
+	// Search LoopEndPoint
+	var endPoint *Node = nil
+	cur := n.Next
+	for cur != nil {
+		if cur.Type == LoopEnd {
+			endPoint = cur
+			break
+		}
+		cur = cur.Next
+	}
+	// loop item
+	loop := song.LoopItem{
+		Count:     loopCount,
+		Index:     0,
+		BeginNode: n.Next,
+		EndNode:   endPoint.Next,
+	}
+	s.PushLoop(&loop)
+}
+
+// NewLoopEnd func
+func NewLoopEnd() *Node {
+	n := NewNode(LoopEnd)
+	n.Exec = execLoopEnd
+	return n
+}
+
+func execLoopEnd(n *Node, s *song.Song) {
+	loop := s.PeekLoop()
+	loop.Index++
+	if loop.Index == loop.Count {
+		s.PopLoop()
+		return
+	}
+	// back to begin node
+	s.MoveNode = loop.BeginNode
+}
+
+// NewLoopBreak func
+func NewLoopBreak() *Node {
+	n := NewNode(LoopBreak)
+	n.Exec = execLoopBreak
+	return n
+}
+
+func execLoopBreak(n *Node, s *song.Song) {
+	loop := s.PeekLoop()
+	// last one time?
+	if loop.Index == loop.Count-1 {
+		// go to last
+		s.MoveNode = loop.EndNode
+	}
 }

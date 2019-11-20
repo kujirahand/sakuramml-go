@@ -60,6 +60,12 @@ func (p *Parser) readWord() (*node.Node, error) {
 		return node.NewSetOctave(nil, "++"), nil
 	case "<", "↓":
 		return node.NewSetOctave(nil, "--"), nil
+	case "[":
+		return p.readLoopBegin()
+	case "]":
+		return p.readLoopEnd()
+	case ":":
+		return p.readLoopBreak()
 	}
 	return nil, fmt.Errorf("Unknown Word : %s", t.Label)
 }
@@ -70,7 +76,7 @@ func (p *Parser) Parse() (*node.Node, error) {
 	var err error
 	for p.desk.HasNext() {
 		tok := p.desk.Peek()
-		fmt.Printf("parse %v\n", *tok)
+		// fmt.Printf("parse %v\n", *tok)
 		switch tok.Type {
 		case token.Word, token.Flag:
 			nod, err = p.readWord()
@@ -84,7 +90,7 @@ func (p *Parser) Parse() (*node.Node, error) {
 			p.desk.Next()
 			continue
 		}
-		err = fmt.Errorf("[ERROR] (%d) not implemented : %s ",
+		err = fmt.Errorf("[ERROR] (%d) Parser not implemented : %s ",
 			p.desk.Peek().Line, p.desk.Peek().Label)
 		return p.Top, err
 	}
@@ -139,6 +145,30 @@ func (p *Parser) readRest(t *token.Token) (*node.Node, error) {
 		ex.Length = nLen
 	}
 	return n, nil
+}
+
+func (p *Parser) readLoopBegin() (*node.Node, error) {
+	var loopValue *node.Node
+	var err error
+	// loop counter ?
+	if p.desk.IsType(token.Number) || p.desk.IsLabel("(") {
+		loopValue, err = p.readValue()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// no counter => 2
+		loopValue = node.NewNumberInt(2)
+	}
+
+	nodeLoopBegin := node.NewLoopBegin(loopValue)
+	return nodeLoopBegin, nil
+}
+func (p *Parser) readLoopEnd() (*node.Node, error) {
+	return node.NewLoopEnd(), nil
+}
+func (p *Parser) readLoopBreak() (*node.Node, error) {
+	return node.NewLoopBreak(), nil
 }
 
 func (p *Parser) readValue() (*node.Node, error) {
