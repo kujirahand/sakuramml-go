@@ -1,6 +1,11 @@
 package token
 
+// TType type
+type TType string
+
 const (
+	// Comment : Token type
+	Comment TType = "comment"
 	// Word : Token type
 	Word = "word"
 	// Number : Token type
@@ -17,12 +22,9 @@ const (
 	BracketR = "]"
 )
 
-// TokenType type
-type TokenType string
-
 // Token struct
 type Token struct {
-	Type  TokenType
+	Type  TType
 	Label string
 	Line  int
 }
@@ -35,7 +37,7 @@ func TokensToString(tokens Tokens, delimiter string) string {
 	s := ""
 	for i, t := range tokens {
 		// s += fmt.Sprintf("%3d: %5s %s\n", i, t.Type, t.Label)
-		s += t.Label
+		s += t.Label + "(" + string(t.Type) + ")"
 		if i != len(tokens)-1 {
 			s += delimiter
 		}
@@ -91,7 +93,7 @@ func (desk *Desk) Back() {
 }
 
 // IsType func
-func (desk *Desk) IsType(tt TokenType) bool {
+func (desk *Desk) IsType(tt TType) bool {
 	t := desk.Peek()
 	if t == nil {
 		return false

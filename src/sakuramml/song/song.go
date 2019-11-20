@@ -3,6 +3,7 @@ package song
 import (
 	"fmt"
 	"sakuramml/event"
+	"sakuramml/utils"
 	"sort"
 	"strconv"
 )
@@ -45,7 +46,7 @@ func (track *Track) AddEvent(event event.Event) {
 }
 
 // AddNoteOn add NoteOn event to track
-func (track *Track) AddNoteOn(time, note, vel, lenStep int) {
+func (track *Track) AddNoteOn(time, note, vel, lenStep int) (*event.Event, *event.Event) {
 	eon := event.Event{
 		Time:      time,
 		ByteCount: 3,
@@ -62,10 +63,11 @@ func (track *Track) AddNoteOn(time, note, vel, lenStep int) {
 	}
 	track.AddEvent(eon)
 	track.AddEvent(eoff)
+	return &eon, &eoff
 }
 
 // AddCC Add Controll Change
-func (track *Track) AddCC(time, no, value int) {
+func (track *Track) AddCC(time, no, value int) *event.Event {
 	cc := event.Event{
 		Time:      time,
 		ByteCount: 3,
@@ -74,10 +76,11 @@ func (track *Track) AddCC(time, no, value int) {
 		Data2:     value,
 	}
 	track.AddEvent(cc)
+	return &cc
 }
 
 // AddProgramChange Add Controll Change
-func (track *Track) AddProgramChange(time, value int) {
+func (track *Track) AddProgramChange(time, value int) *event.Event {
 	pc := event.Event{
 		Time:      time,
 		ByteCount: 2,
@@ -85,10 +88,36 @@ func (track *Track) AddProgramChange(time, value int) {
 		Data1:     value,
 	}
 	track.AddEvent(pc)
+	return &pc
+}
+
+// AddPitchBend func ... p% command (%をつけると-8192~0~8191))
+func (track *Track) AddPitchBend(time, value int) *event.Event {
+	// calc msb, lsb
+	v := value + 8192
+	v = utils.InRange(0, v, 16383)
+	msb := v >> 7 & 0x7f
+	lsb := v & 0x7f
+	// gen
+	pb := event.Event{
+		Time:      time,
+		ByteCount: 3,
+		Type:      event.PitchBend | track.Channel,
+		Data1:     lsb, // low byte <--- MIDI仕様からすると逆に思えるが lsb, msb の順が正しい
+		Data2:     msb, // high byte
+	}
+	track.AddEvent(pb)
+	return &pb
+}
+
+// AddPitchBendEx func ... p command / 簡易ピッチベンドを書き込む(0~63~127の範囲)
+func (track *Track) AddPitchBendEx(time, value int) *event.Event {
+	v := value * 64
+	return track.AddPitchBend(time, v)
 }
 
 // AddTempo func
-func (track *Track) AddTempo(time, tempo int) {
+func (track *Track) AddTempo(time, tempo int) *event.Event {
 	e := event.Event{
 		Time:      time,
 		ByteCount: 6,
@@ -104,6 +133,26 @@ func (track *Track) AddTempo(time, tempo int) {
 		byte(mpq & 0xff),
 	}
 	track.AddEvent(e)
+	return &e
+}
+
+// AddMeta func
+func (track *Track) AddMeta(time, metaType int, data []byte) *event.Event {
+	e := event.Event{
+		Time:      time,
+		ByteCount: 3 + len(data),
+		Type:      0xFF00 | metaType,
+	}
+	buf := make([]byte, 3+len(data))
+	e.ExData = buf
+	buf[0] = 0xFF
+	buf[1] = byte(metaType)
+	buf[2] = byte(len(data))
+	for i := 0; i < len(data); i++ {
+		buf[3+i] = data[i]
+	}
+	track.AddEvent(e)
+	return &e
 }
 
 // SortEvents sort Events of track

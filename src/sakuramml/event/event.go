@@ -17,6 +17,8 @@ const (
 	PitchBend = 0xE0
 	// Tempo = (Meta Event)
 	Tempo = 0xFF51
+	// MetaText
+	MetaText = 0xFF01
 )
 
 // Event is Basic MIDI Event

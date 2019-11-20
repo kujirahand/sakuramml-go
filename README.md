@@ -13,3 +13,8 @@ macOSなら``brew install direnv``でインストールしておいてくださ�
 direnv allow
 ```
 
+## Compile
+
+```
+go build src/csakura.go
+```

@@ -10,6 +10,8 @@ import (
 const (
 	// Nop const
 	Nop = "Nop"
+	// Comment const
+	Comment = "Comment"
 	// NoteOn const
 	NoteOn = "NoteOn"
 	// SetTrack const
@@ -100,18 +102,41 @@ type ExDataNoteOn struct {
 
 // NewNode func
 func NewNode(nodeType NType) *Node {
-	n := Node{Type: nodeType, Exec: execNop}
+	n := Node{Type: nodeType, Exec: execNone}
 	n.Next = nil
 	n.NValue = nil
 	return &n
 }
 
+func execNone(n *Node, s *song.Song) {
+	err := fmt.Errorf("not implemented : %v", *n)
+	panic(err)
+}
+
 // NewNop func
 func NewNop() *Node {
-	return NewNode(Nop)
+	t := NewNode(Nop)
+	t.Exec = execNop
+	return t
 }
 func execNop(n *Node, s *song.Song) {
 	// nop
+}
+
+// NewComment func
+func NewComment(text string) *Node {
+	t := NewNode(Comment)
+	t.Exec = execComment
+	t.SValue = text
+	return t
+}
+func execComment(n *Node, s *song.Song) {
+	tr := s.CurTrack()
+	tb := []byte(n.SValue)
+	if len(tb) > 255 {
+		tb = tb[0:255]
+	}
+	tr.AddMeta(tr.Time, 0x01, tb)
 }
 
 // NewNoteOn func (NoteOn and Rest)

@@ -15,19 +15,80 @@ type Parser struct {
 	Last *node.Node
 }
 
-// Init parser
-func (p *Parser) Init(tokens token.Tokens) {
+// NewParser func
+func NewParser(tokens token.Tokens) *Parser {
+	p := Parser{}
 	p.desk = token.NewDesk(tokens)
 	nop := node.NewNop()
 	p.Top = nop
 	p.Last = p.Top
+	return &p
 }
 
-// NewParser func
-func NewParser(tokens token.Tokens) *Parser {
-	p := Parser{}
-	p.Init(tokens)
-	return &p
+func (p *Parser) readWord() (*node.Node, error) {
+	t := p.desk.Next()
+	switch t.Label {
+	case "c", "ド":
+		return p.readNoteOn(t)
+	case "d", "レ":
+		return p.readNoteOn(t)
+	case "e", "ミ":
+		return p.readNoteOn(t)
+	case "f", "フ":
+		return p.readNoteOn(t)
+	case "g", "ソ":
+		return p.readNoteOn(t)
+	case "a", "ラ":
+		return p.readNoteOn(t)
+	case "b", "シ":
+		return p.readNoteOn(t)
+	case "r", "ン", "ッ":
+		return p.readRest(t)
+	case "l":
+		return p.readSetLength()
+	case "o":
+		return p.read1pCmd(t, node.SetOctave)
+	case "v":
+		return p.read1pCmd(t, node.SetVelocity)
+	case "@", "Voice", "VOICE":
+		return p.readVoice(t)
+	case "TR", "Track":
+		return p.read1pCmd(t, node.SetTrack)
+	case "Tempo":
+		return p.read1pCmd(t, node.SetTempo)
+	case ">", "↑":
+		return node.NewSetOctave(nil, "++"), nil
+	case "<", "↓":
+		return node.NewSetOctave(nil, "--"), nil
+	}
+	return nil, fmt.Errorf("Unknown Word : %s", t.Label)
+}
+
+// Parse func
+func (p *Parser) Parse() (*node.Node, error) {
+	var nod *node.Node
+	var err error
+	for p.desk.HasNext() {
+		tok := p.desk.Peek()
+		fmt.Printf("parse %v\n", *tok)
+		switch tok.Type {
+		case token.Word, token.Flag:
+			nod, err = p.readWord()
+			if err != nil {
+				return nil, err
+			}
+			p.appendNode(nod)
+			continue
+		case token.Comment:
+			p.appendNode(node.NewComment(tok.Label))
+			p.desk.Next()
+			continue
+		}
+		err = fmt.Errorf("[ERROR] (%d) not implemented : %s ",
+			p.desk.Peek().Line, p.desk.Peek().Label)
+		return p.Top, err
+	}
+	return p.Top, nil
 }
 
 func (p *Parser) appendNode(n *node.Node) {
@@ -68,7 +129,7 @@ func (p *Parser) readNoteOn(t *token.Token) (*node.Node, error) {
 
 func (p *Parser) readRest(t *token.Token) (*node.Node, error) {
 	ex := node.ExDataNoteOn{}
-	n := node.NewNoteOn(t.Label, &ex)
+	n := node.NewNoteOn("r", &ex)
 	// length ?
 	if p.desk.IsType(token.Number) || p.desk.IsLabel("^") {
 		nLen, err := p.readLength()
@@ -219,82 +280,6 @@ func (p *Parser) readSetLength() (*node.Node, error) {
 		return nil, err
 	}
 	return node.NewSetLength(nodeLength), nil
-}
-
-func (p *Parser) readWord() (*node.Node, error) {
-	t := p.desk.Next()
-	switch t.Label {
-	case "c", "ド":
-		return p.readNoteOn(t)
-	case "d", "レ":
-		return p.readNoteOn(t)
-	case "e", "ミ":
-		return p.readNoteOn(t)
-	case "f", "フ":
-		return p.readNoteOn(t)
-	case "g", "ソ":
-		return p.readNoteOn(t)
-	case "a", "ラ":
-		return p.readNoteOn(t)
-	case "b", "シ":
-		return p.readNoteOn(t)
-	case "r", "ン", "ッ":
-		t.Label = "r"
-		return p.readRest(t)
-	case "l":
-		return p.readSetLength()
-	case "o":
-		return p.read1pCmd(t, node.SetOctave)
-	case "v":
-		return p.read1pCmd(t, node.SetVelocity)
-	case "@", "Voice", "VOICE":
-		return p.readVoice(t)
-	case "TR", "Track":
-		return p.read1pCmd(t, node.SetTrack)
-	case "Tempo":
-		return p.read1pCmd(t, node.SetTempo)
-	}
-	return nil, fmt.Errorf("Unknown Word : %s", t.Label)
-}
-
-func (p *Parser) readFlag() (*node.Node, error) {
-	t := p.desk.Next()
-	switch t.Label {
-	case ">", "↑":
-		return node.NewSetOctave(nil, "++"), nil
-	case "<", "↓":
-		return node.NewSetOctave(nil, "--"), nil
-	case "@":
-		return p.readVoice(t)
-	}
-	return nil, fmt.Errorf("Unknown Word : %s", t.Label)
-}
-
-// Parse func
-func (p *Parser) Parse() (*node.Node, error) {
-	var e error
-	for p.desk.HasNext() {
-		t := p.desk.Peek()
-		if t.Type == token.Word {
-			nn, err := p.readWord()
-			if err != nil {
-				return nil, err
-			}
-			p.appendNode(nn)
-			continue
-		}
-		if t.Type == token.Flag {
-			nn, err := p.readFlag()
-			if err != nil {
-				return nil, err
-			}
-			p.appendNode(nn)
-			continue
-		}
-		e = fmt.Errorf("[ERROR] (%d) not implements : %s ", p.desk.Peek().Line, p.desk.Peek().Label)
-		return p.Top, e
-	}
-	return p.Top, nil
 }
 
 // Parse convert to AST
