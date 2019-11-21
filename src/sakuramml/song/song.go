@@ -112,9 +112,9 @@ func (track *Track) AddPitchBend(time, value int) *event.Event {
 	return &pb
 }
 
-// AddPitchBendEx func ... p command / 簡易ピッチベンドを書き込む(0~63~127の範囲)
+// AddPitchBendEasy func ... p command / 簡易ピッチベンドを書き込む(0~63~127の範囲)
 func (track *Track) AddPitchBendEasy(time, value int) *event.Event {
-	v := value * 128 - 8192
+	v := value*128 - 8192
 	return track.AddPitchBend(time, v)
 }
 
@@ -178,7 +178,7 @@ type LoopItem struct {
 	Index     int
 	Count     int
 	BeginNode interface{} // Node
-	EndNode	  interface{} // Node
+	EndNode   interface{} // Node
 }
 
 // Song is info of song, include tracks
@@ -270,7 +270,7 @@ func (song *Song) PopLoop() {
 func (song *Song) PeekLoop() *LoopItem {
 	ilen := len(song.LoopStack)
 	if ilen > 0 {
-		return song.LoopStack[ilen - 1]
+		return song.LoopStack[ilen-1]
 	}
 	return nil
 }

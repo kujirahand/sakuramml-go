@@ -33,7 +33,7 @@ func TokensToString(tokens Tokens, delimiter string) string {
 	s := ""
 	for i, t := range tokens {
 		// s += fmt.Sprintf("%3d: %5s %s\n", i, t.Type, t.Label)
-		s += t.Label + "(" + string(t.Type) + ")"
+		s += t.Label
 		if i != len(tokens)-1 {
 			s += delimiter
 		}

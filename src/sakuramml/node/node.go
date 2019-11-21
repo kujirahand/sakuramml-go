@@ -7,6 +7,9 @@ import (
 	"strconv"
 )
 
+// NType type
+type NType string
+
 const (
 	// Nop const
 	Nop NType = "Nop"
@@ -52,9 +55,6 @@ const (
 	LoopBreak = "LoopBreak"
 )
 
-// NType type
-type NType string
-
 // Node struct
 type Node struct {
 	Type   NType
@@ -97,6 +97,21 @@ func (n *Node) ToStringAll() string {
 	return nodeToStringN(n, 0)
 }
 
+// ToStringAllName func
+func (n *Node) ToStringAllName(delimiter string) string {
+	s := ""
+	nTop := n
+	nCur := nTop
+	for nCur != nil {
+		s += string(nCur.Type)
+		if nCur.Next != nil {
+			s += delimiter
+		}
+		nCur = nCur.Next
+	}
+	return s
+}
+
 // ExDataNode strcut
 type ExDataNode struct {
 	Value *Node
@@ -104,8 +119,15 @@ type ExDataNode struct {
 
 // ExDataNoteOn struct
 type ExDataNoteOn struct {
-	NoteShift int
-	Length    *Node
+	NoteShift   int
+	Length      *Node
+	Qgate       *Node
+	QgateOpt    rune
+	QgateMode   string
+	Velocity    *Node
+	VelocityOpt rune
+	NoteNo      *Node
+	NoteNoOpt   rune
 }
 
 // NewNode func
@@ -117,7 +139,7 @@ func NewNode(nodeType NType) *Node {
 }
 
 func execNone(n *Node, s *song.Song) {
-	err := fmt.Errorf("not implemented : %v", *n)
+	err := fmt.Errorf("Exec failed, not implemented : %v", *n)
 	panic(err)
 }
 
@@ -151,7 +173,7 @@ func execComment(n *Node, s *song.Song) {
 func NewNoteOn(note string, ex *ExDataNoteOn) *Node {
 	// detect note no
 	notemap := map[string]int{
-		"c": 0, "d": 2, "e": 4, "f": 5, "g": 7, "a": 9, "b": 11, "r": -1,
+		"c": 0, "d": 2, "e": 4, "f": 5, "g": 7, "a": 9, "b": 11, "r": -1, "n": -1,
 	}
 	// new
 	n := NewNode(NoteOn)
@@ -168,6 +190,7 @@ func execNoteOn(n *Node, s *song.Song) {
 	length := track.Length
 	qgate := track.Qgate
 	qgatemode := track.QgateMode
+	qgateAdd := 0
 	velocity := track.Velocity
 	// Temporary change?
 	ex := n.ExData.(*ExDataNoteOn)
@@ -175,22 +198,47 @@ func execNoteOn(n *Node, s *song.Song) {
 		ex.Length.Exec(ex.Length, s)
 		length = s.PopIValue()
 	}
+	if ex.Qgate != nil {
+		ex.Qgate.Exec(ex.Qgate, s)
+		qv := s.PopIValue()
+		if ex.QgateOpt == rune('+') || ex.QgateOpt == rune('-') {
+			if ex.QgateMode == song.QgateModeStep {
+				qgateAdd = qv
+			} else {
+				qgateAdd = int(float64(length) * float64(qv) / 100)
+			}
+			if ex.QgateOpt == rune('-') {
+				qgateAdd *= -1
+			}
+		} else {
+			qgate = calcFlagValue(qgate, s.PopIValue(), string(ex.QgateOpt))
+			qgatemode = ex.QgateMode
+		}
+	}
+	if ex.Velocity != nil {
+		ex.Velocity.Exec(ex.Velocity, s)
+		velocity = calcFlagValue(velocity, s.PopIValue(), string(ex.VelocityOpt))
+	}
 	// calc
 	qlen := qgate
 	if qgatemode == song.QgateModeRate {
 		qlen = int(float64(length) * float64(qgate) / 100)
 	}
+	qlen += qgateAdd
 	// rest or note
 	if n.SValue == "r" {
 		if s.Debug {
 			nls := s.StepToN(length)
 			fmt.Printf("- Time(%s) l%-2s r \n", s.TimePtrToStr(track.Time), nls)
 		}
-	} else if n.SValue == "n" {
-		// todo "n"
 	} else {
-		// calc note shift
-		noteno = track.Octave*12 + n.IValue + ex.NoteShift
+		if n.SValue == "n" {
+			ex.NoteNo.Exec(ex.NoteNo, s)
+			noteno = s.PopIValue()
+		} else {
+			// calc note shift(# or flat)
+			noteno = track.Octave*12 + n.IValue + ex.NoteShift
+		}
 		if s.Debug {
 			notemap2 := []string{"c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b"}
 			nls := s.StepToN(length)
@@ -320,7 +368,7 @@ func execSetQgate(n *Node, s *song.Song) {
 	tr := s.CurTrack()
 	opt := n.SValue
 	// set Qgate
-	if opt[0] == '%' {
+	if len(opt) > 0 && opt[0] == '%' {
 		// Direct Value
 		opt = opt[1:]
 		tr.Qgate = calcFlagValue(tr.Qgate, s.PopIValue(), opt)

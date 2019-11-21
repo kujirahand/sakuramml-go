@@ -1,6 +1,14 @@
-/// test
-p%0
-[4 cde:f ] g
+// test
 
+v50q100
+c4,-%10,+50
+
+/*
+TR(1) l4 cdef | gfed | c^^^
+*/
+/*
+p%0 [4 cde:f ] g
+TR(1) l4 n63,4^^^ cdef g^^^
+*/
 
 

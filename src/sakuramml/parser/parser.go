@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"sakuramml/node"
+	"sakuramml/song"
 	"sakuramml/token"
 	"sakuramml/utils"
 	"strconv"
@@ -42,12 +43,16 @@ func (p *Parser) readWord() (*node.Node, error) {
 		return p.readNoteOn(t)
 	case "b", "シ":
 		return p.readNoteOn(t)
+	case "n":
+		return p.readNoteOn(t)
 	case "r", "ン", "ッ":
 		return p.readRest(t)
 	case "l":
 		return p.readSetLength()
 	case "o":
 		return p.read1pCmd(t, node.SetOctave)
+	case "q":
+		return p.read1pCmd(t, node.SetQgate)
 	case "v":
 		return p.read1pCmd(t, node.SetVelocity)
 	case "p":
@@ -68,6 +73,8 @@ func (p *Parser) readWord() (*node.Node, error) {
 		return p.readLoopEnd()
 	case ":":
 		return p.readLoopBreak()
+	case "|":
+		return node.NewNop(), nil
 	}
 	return nil, fmt.Errorf("[Error] (%d) Unknown Word : %s", t.Line, t.Label)
 }
@@ -108,8 +115,20 @@ func (p *Parser) appendNode(n *node.Node) {
 }
 
 func (p *Parser) readNoteOn(t *token.Token) (*node.Node, error) {
+	var err error
 	ex := node.ExDataNoteOn{}
 	n := node.NewNoteOn(t.Label, &ex)
+	// n command ?
+	if t.Label == "n" {
+		notenoNode, err := p.readValue()
+		if err != nil {
+			return nil, fmt.Errorf("[ERRPR] (%d) Failed to read n command NoteNo", t.Line)
+		}
+		ex.NoteNo = notenoNode
+		if p.desk.IsLabel(",") {
+			p.desk.Next()
+		}
+	}
 	// sharp or flat
 	for {
 		if p.desk.IsLabel("+") || p.desk.IsLabel("#") || p.desk.IsLabel("♯") {
@@ -131,6 +150,39 @@ func (p *Parser) readNoteOn(t *token.Token) (*node.Node, error) {
 			return n, err
 		}
 		ex.Length = nLen
+	}
+	// qgate ?
+	if p.desk.IsLabel(",") {
+		p.desk.Next()
+		if !p.desk.IsLabel(",") { // 省略がなければ暫定qを読む
+			ex.QgateMode = song.QgateModeRate
+			if p.desk.IsLabel("+") || p.desk.IsLabel("-") {
+				qf := p.desk.Peek().Label
+				ex.QgateOpt = rune(qf[0])
+				p.desk.Next()
+			}
+			if p.desk.IsLabel("%") {
+				ex.QgateMode = song.QgateModeStep
+				p.desk.Next()
+			}
+			ex.Qgate, err = p.readValue()
+			if err != nil {
+				return nil, fmt.Errorf("NoteOn(l,[q]) Error")
+			}
+		}
+		// velocity ?
+		if p.desk.IsLabel(",") {
+			p.desk.Next()
+			if !p.desk.IsLabel(",") { // 省略がなければvを読む
+				if p.desk.IsLabel("+") || p.desk.IsLabel("-") {
+					ex.VelocityOpt = rune(p.desk.Next().Label[0])
+				}
+				ex.Velocity, err = p.readValue()
+				if err != nil {
+					return nil, fmt.Errorf("NoteOn(l, q, [v]) Error")
+				}
+			}
+		}
 	}
 	return n, nil
 }
