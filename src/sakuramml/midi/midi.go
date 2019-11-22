@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sakuramml/track"
 	"sakuramml/song"
 )
 
@@ -68,7 +69,7 @@ func SaveToFile(sng *song.Song, outfile string) {
 	Save(sng, f)
 }
 
-func getTrackData(track *song.Track) []byte {
+func getTrackData(track *track.Track) []byte {
 	buf := new(bytes.Buffer)
 	// track.SortEvent()
 	events := track.Events

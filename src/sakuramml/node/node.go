@@ -3,6 +3,7 @@ package node
 import (
 	"fmt"
 	"sakuramml/song"
+	"sakuramml/track"
 	"sakuramml/utils"
 	"strconv"
 )
@@ -185,13 +186,13 @@ func NewNoteOn(note string, ex *ExDataNoteOn) *Node {
 }
 
 func execNoteOn(n *Node, s *song.Song) {
-	track := s.CurTrack()
+	tr := s.CurTrack()
 	noteno := 0
-	length := track.Length
-	qgate := track.Qgate
-	qgatemode := track.QgateMode
+	length := tr.Length
+	qgate := tr.Qgate
+	qgatemode := tr.QgateMode
 	qgateAdd := 0
-	velocity := track.Velocity
+	velocity := tr.Velocity
 	// Temporary change?
 	ex := n.ExData.(*ExDataNoteOn)
 	if ex.Length != nil {
@@ -202,7 +203,7 @@ func execNoteOn(n *Node, s *song.Song) {
 		ex.Qgate.Exec(ex.Qgate, s)
 		qv := s.PopIValue()
 		if ex.QgateOpt == rune('+') || ex.QgateOpt == rune('-') {
-			if ex.QgateMode == song.QgateModeStep {
+			if ex.QgateMode == track.QgateModeStep {
 				qgateAdd = qv
 			} else {
 				qgateAdd = int(float64(length) * float64(qv) / 100)
@@ -221,7 +222,7 @@ func execNoteOn(n *Node, s *song.Song) {
 	}
 	// calc
 	qlen := qgate
-	if qgatemode == song.QgateModeRate {
+	if qgatemode == track.QgateModeRate {
 		qlen = int(float64(length) * float64(qgate) / 100)
 	}
 	qlen += qgateAdd
@@ -229,7 +230,7 @@ func execNoteOn(n *Node, s *song.Song) {
 	if n.SValue == "r" {
 		if s.Debug {
 			nls := s.StepToN(length)
-			fmt.Printf("- Time(%s) l%-2s r \n", s.TimePtrToStr(track.Time), nls)
+			fmt.Printf("- Time(%s) l%-2s r \n", s.TimePtrToStr(tr.Time), nls)
 		}
 	} else {
 		if n.SValue == "n" {
@@ -237,18 +238,18 @@ func execNoteOn(n *Node, s *song.Song) {
 			noteno = s.PopIValue()
 		} else {
 			// calc note shift(# or flat)
-			noteno = track.Octave*12 + n.IValue + ex.NoteShift
+			noteno = tr.Octave*12 + n.IValue + ex.NoteShift
 		}
 		if s.Debug {
 			notemap2 := []string{"c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b"}
 			nls := s.StepToN(length)
 			fmt.Printf(
 				"- Time(%s) TR=%-2d l%-2s o%d v%-3d q%%%-3d %-3s \n",
-				s.TimePtrToStr(track.Time), s.TrackNo, nls, int(noteno/12), velocity, qlen, notemap2[noteno%12])
+				s.TimePtrToStr(tr.Time), s.TrackNo, nls, int(noteno/12), velocity, qlen, notemap2[noteno%12])
 		}
-		track.AddNoteOn(track.Time, noteno, velocity, qlen)
+		tr.AddNoteOn(tr.Time, noteno, velocity, qlen)
 	}
-	track.Time += length
+	tr.Time += length
 }
 
 // NewNumber func
@@ -372,11 +373,11 @@ func execSetQgate(n *Node, s *song.Song) {
 		// Direct Value
 		opt = opt[1:]
 		tr.Qgate = calcFlagValue(tr.Qgate, s.PopIValue(), opt)
-		tr.QgateMode = song.QgateModeStep
+		tr.QgateMode = track.QgateModeStep
 	} else {
 		// Percent Value
 		tr.Qgate = calcFlagValue(tr.Qgate, s.PopIValue(), opt)
-		tr.QgateMode = song.QgateModeRate
+		tr.QgateMode = track.QgateModeRate
 	}
 	if tr.Qgate < 1 {
 		tr.Qgate = 1

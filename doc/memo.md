@@ -44,7 +44,7 @@ v+=10 cdeg v-=10 cdeg v++ cdeg v-- cdeg
 [4 cde:g] c
 ```
 
-## ノートの暫定変化
+## ノートオン時の暫定変化
 
 ```
 // (NOTE)l,q,v

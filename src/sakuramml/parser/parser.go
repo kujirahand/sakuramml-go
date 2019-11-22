@@ -3,7 +3,7 @@ package parser
 import (
 	"fmt"
 	"sakuramml/node"
-	"sakuramml/song"
+	"sakuramml/track"
 	"sakuramml/token"
 	"sakuramml/utils"
 	"strconv"
@@ -155,14 +155,14 @@ func (p *Parser) readNoteOn(t *token.Token) (*node.Node, error) {
 	if p.desk.IsLabel(",") {
 		p.desk.Next()
 		if !p.desk.IsLabel(",") { // 省略がなければ暫定qを読む
-			ex.QgateMode = song.QgateModeRate
+			ex.QgateMode = track.QgateModeRate
 			if p.desk.IsLabel("+") || p.desk.IsLabel("-") {
 				qf := p.desk.Peek().Label
 				ex.QgateOpt = rune(qf[0])
 				p.desk.Next()
 			}
 			if p.desk.IsLabel("%") {
-				ex.QgateMode = song.QgateModeStep
+				ex.QgateMode = track.QgateModeStep
 				p.desk.Next()
 			}
 			ex.Qgate, err = p.readValue()
