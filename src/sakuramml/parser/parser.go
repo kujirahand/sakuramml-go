@@ -12,6 +12,7 @@ import (
 // Parser struct
 type Parser struct {
 	desk token.Desk
+	harmonyStack []*node.Node
 	Top  *node.Node
 	Last *node.Node
 }
@@ -20,6 +21,7 @@ type Parser struct {
 func NewParser(tokens token.Tokens) *Parser {
 	p := Parser{}
 	p.desk = token.NewDesk(tokens)
+	p.harmonyStack = []*node.Node{}
 	nop := node.NewNop()
 	p.Top = nop
 	p.Last = p.Top
@@ -59,9 +61,9 @@ func (p *Parser) readWord() (*node.Node, error) {
 		return p.read1pCmd(t, node.SetPitchBend)
 	case "@", "Voice", "VOICE":
 		return p.readVoice(t)
-	case "TR", "Track":
+	case "TR", "Track", "TRACK":
 		return p.read1pCmd(t, node.SetTrack)
-	case "Tempo":
+	case "Tempo", "TEMPO", "BPM":
 		return p.read1pCmd(t, node.SetTempo)
 	case ">", "↑":
 		return node.NewSetOctave(nil, "++"), nil
@@ -75,6 +77,10 @@ func (p *Parser) readWord() (*node.Node, error) {
 		return p.readLoopBreak()
 	case "|":
 		return node.NewNop(), nil
+	case "Int":
+		return p.readInt()
+	default:
+		//
 	}
 	return nil, fmt.Errorf("[Error] (%d) Unknown Word : %s", t.Line, t.Label)
 }
@@ -119,13 +125,14 @@ func (p *Parser) readNoteOn(t *token.Token) (*node.Node, error) {
 	var err error
 	ex := node.ExDataNoteOn{}
 	n := node.NewNoteOn(t.Label, &ex)
+	isHarmony := false
 	// n command ?
 	if t.Label == "n" {
-		notenoNode, err := p.readValue()
+		noteNoNode, err := p.readValue()
 		if err != nil {
 			return nil, fmt.Errorf("[ERRPR] (%d) Failed to read n command NoteNo", t.Line)
 		}
-		ex.NoteNo = notenoNode
+		ex.NoteNo = noteNoNode
 		if p.desk.IsLabel(",") {
 			p.desk.Next()
 		}
@@ -146,11 +153,17 @@ func (p *Parser) readNoteOn(t *token.Token) (*node.Node, error) {
 	}
 	// length ?
 	if p.desk.IsType(token.Number) || p.desk.IsLabel("^") {
-		nLen, err := p.readLength()
-		if err != nil {
-			return n, err
+		if p.desk.IsLabel("0") {
+			p.desk.Next() // skip "0"
+			p.harmonyStack = append(p.harmonyStack, n)
+			isHarmony =true
+		} else {
+			nLen, err := p.readLength()
+			if err != nil {
+				return n, err
+			}
+			ex.Length = nLen
 		}
-		ex.Length = nLen
 	}
 	// qgate ?
 	if p.desk.IsLabel(",") {
@@ -184,6 +197,9 @@ func (p *Parser) readNoteOn(t *token.Token) (*node.Node, error) {
 				}
 			}
 		}
+	}
+	if !isHarmony && len(p.harmonyStack) > 0{
+
 	}
 	return n, nil
 }
@@ -235,6 +251,10 @@ func (p *Parser) readValue() (*node.Node, error) {
 		nn := node.NewNumber(ct.Label)
 		p.desk.Next()
 		return nn, nil
+	} else if p.desk.IsType(token.Word) {
+		wn := node.NewPushVariable(ct.Label)
+		p.desk.Next()
+		return wn, nil
 	}
 	return nil, fmt.Errorf("not implement : %s", ct.Label)
 }
@@ -367,6 +387,28 @@ func (p *Parser) readSetLength() (*node.Node, error) {
 		return nil, err
 	}
 	return node.NewSetLength(nodeLength), nil
+}
+
+func (p *Parser) readInt() (*node.Node, error) {
+	errMsg := "Invalid Int command : Int Name = Value"
+	varName := p.desk.Next()
+	if varName.Type != token.Word {
+		return nil, fmt.Errorf(errMsg)
+	}
+	if !p.desk.IsLabel("=") {
+		return nil, fmt.Errorf(errMsg)
+	}
+	p.desk.Next() // skip "="
+	valueToken := p.desk.Next()
+	if valueToken.Type != token.Number {
+		return nil, fmt.Errorf(errMsg)
+	}
+	value, err := strconv.Atoi(valueToken.Label)
+	if err != nil {
+		return nil, fmt.Errorf(errMsg)
+	}
+	nodeInt := node.NewIntLet(varName.Label, value)
+	return nodeInt, nil
 }
 
 // Parse convert to AST

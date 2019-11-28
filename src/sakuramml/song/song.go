@@ -3,6 +3,7 @@ package song
 import (
 	"fmt"
 	"sakuramml/track"
+	"sakuramml/variable"
 	"strconv"
 )
 
@@ -24,6 +25,7 @@ type Song struct {
 	Tracks    []*track.Track
 	LoopStack []*LoopItem
 	MoveNode  interface{} // Node
+	Variable  *variable.Variable
 }
 
 // NewSong func
@@ -41,6 +43,7 @@ func NewSong() *Song {
 	s.TrackNo = 0
 	s.Stack = make([]interface{}, 0, 256)
 	s.MoveNode = nil
+	s.Variable = variable.NewVariable()
 	return &s
 }
 
@@ -68,6 +71,17 @@ func (song *Song) PopIValue() int {
 		return v.(int)
 	}
 	return 0
+}
+
+// PushValue func
+func (song *Song) PushValue(v *variable.Value) {
+	if v.Type == variable.VTypeInt {
+		song.PushIValue(v.IValue)
+	} else if v.Type == variable.VTypeStr {
+		song.PushSValue(v.SValue)
+	} else {
+		song.Stack = append(song.Stack, v)
+	}
 }
 
 // PushSValue func

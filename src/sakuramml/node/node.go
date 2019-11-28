@@ -54,6 +54,12 @@ const (
 	LoopEnd = "LoopEnd"
 	// LoopBreak const
 	LoopBreak = "LoopBreak"
+	// IntLet const
+	IntLet = "IntLet"
+	// StrLet const
+	StrLet = "StrLet"
+	// PushVariable const
+	PushVariable = "PushVariable"
 )
 
 // Node struct
@@ -83,6 +89,8 @@ func nodeToStringN(n *Node, level int) string {
 			params = i.SValue
 		case Number:
 			params = fmt.Sprintf("%d", i.IValue)
+		case PushVariable:
+			params = fmt.Sprintf("%s", i.SValue)
 		}
 		s += tab + string(i.Type) + " " + params + "\n"
 		if i.NValue != nil {
@@ -113,7 +121,7 @@ func (n *Node) ToStringAllName(delimiter string) string {
 	return s
 }
 
-// ExDataNode strcut
+// ExDataNode struct
 type ExDataNode struct {
 	Value *Node
 }
@@ -279,6 +287,24 @@ func NewNumberInt(no int) *Node {
 func execPushIValue(n *Node, s *song.Song) {
 	s.PushIValue(n.IValue)
 }
+
+// NewPushVariable func
+func NewPushVariable(word string) *Node {
+	if word == "" {
+		return nil
+	}
+	n := NewNode(PushVariable)
+	n.SValue = word
+	n.Exec = execPushVariable
+	return n
+}
+
+func execPushVariable(n *Node, s *song.Song) {
+	word := n.SValue
+	value := s.Variable.GetValue(word)
+	s.PushValue(value)
+}
+
 
 // NewSetTrack func
 func NewSetTrack(v *Node, opt string) *Node {
@@ -663,3 +689,17 @@ func execLoopBreak(n *Node, s *song.Song) {
 		s.MoveNode = loop.EndNode
 	}
 }
+
+func NewIntLet(name string, value int) *Node {
+	n := NewNode(IntLet)
+	n.SValue = name
+	n.IValue = value
+	n.Exec = execIntLet
+	return n
+}
+
+func execIntLet(n *Node, s *song.Song) {
+	varName := n.SValue
+	s.Variable.SetIValue(varName, n.IValue)
+}
+
