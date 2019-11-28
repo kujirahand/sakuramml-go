@@ -114,6 +114,7 @@ func (p *Parser) appendNode(n *node.Node) {
 	p.Last = n
 }
 
+// readNoteOn func
 func (p *Parser) readNoteOn(t *token.Token) (*node.Node, error) {
 	var err error
 	ex := node.ExDataNoteOn{}

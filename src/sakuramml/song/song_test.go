@@ -1,12 +1,13 @@
 package song
 
 import (
+	"sakuramml/track"
 	"sakuramml/utils"
 	"testing"
 )
 
 func TestTrackSortEvents(t *testing.T) {
-	trk := NewTrack(0, 96)
+	trk := track.NewTrack(0, 96)
 	trk.AddNoteOn(96, 60, 127, 10)  // on & off
 	trk.AddNoteOn(120, 30, 100, 10) // on & off
 	trk.AddNoteOn(0, 30, 100, 10)   // on & off
@@ -24,7 +25,7 @@ func TestTrackSortEvents(t *testing.T) {
 
 func TestAddTempoEvent(t *testing.T) {
 	// tempo = 120 ... 0xFF 0x51 0x03 0x07 0xA1 0x20
-	trk := NewTrack(0, 96)
+	trk := track.NewTrack(0, 96)
 	eve := trk.AddTempo(0, 120)
 	actual := utils.BytesToHex(eve.ExData)
 	expect := "ff510307a120"
@@ -48,7 +49,7 @@ func TestAddTempoEvent(t *testing.T) {
 }
 
 func TestAddPitchBend(t *testing.T) {
-	trk := NewTrack(0, 96)
+	trk := track.NewTrack(0, 96)
 	pb := trk.AddPitchBend(0, 0)
 	act := utils.BytesToHex(pb.GetDataBytes())
 	exp := "e00040"

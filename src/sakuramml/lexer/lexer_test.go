@@ -19,3 +19,8 @@ func TestLex(t *testing.T) {
 	lexExec(t, "o5", "o 5")
 	lexExec(t, "TR=3 abc", "TR = 3 a b c")
 }
+
+func TestLex2(t *testing.T) {
+	lexExec(t, "o5cde", "o 5 c d e")
+	lexExec(t, "TR=3 [c]", "TR = 3 [ c ]")
+}
