@@ -91,6 +91,8 @@ func nodeToStringN(n *Node, level int) string {
 			params = fmt.Sprintf("%d", i.IValue)
 		case PushVariable:
 			params = fmt.Sprintf("%s", i.SValue)
+		case IntLet:
+			params = fmt.Sprintf("%s=%d", i.SValue, i.IValue)
 		}
 		s += tab + string(i.Type) + " " + params + "\n"
 		if i.NValue != nil {

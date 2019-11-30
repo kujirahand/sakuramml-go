@@ -31,23 +31,23 @@ func NewParser(tokens token.Tokens) *Parser {
 func (p *Parser) readWord() (*node.Node, error) {
 	t := p.desk.Next()
 	switch t.Label {
-	case "c", "ド":
+	case "c":
 		return p.readNoteOn(t)
-	case "d", "レ":
+	case "d":
 		return p.readNoteOn(t)
-	case "e", "ミ":
+	case "e":
 		return p.readNoteOn(t)
-	case "f", "フ":
+	case "f":
 		return p.readNoteOn(t)
-	case "g", "ソ":
+	case "g":
 		return p.readNoteOn(t)
-	case "a", "ラ":
+	case "a":
 		return p.readNoteOn(t)
-	case "b", "シ":
+	case "b":
 		return p.readNoteOn(t)
 	case "n":
 		return p.readNoteOn(t)
-	case "r", "ン", "ッ":
+	case "r":
 		return p.readRest(t)
 	case "l":
 		return p.readSetLength()
@@ -77,7 +77,7 @@ func (p *Parser) readWord() (*node.Node, error) {
 		return p.readLoopBreak()
 	case "|":
 		return node.NewNop(), nil
-	case "Int":
+	case "Int", "INT":
 		return p.readInt()
 	default:
 		//
@@ -390,7 +390,7 @@ func (p *Parser) readSetLength() (*node.Node, error) {
 }
 
 func (p *Parser) readInt() (*node.Node, error) {
-	errMsg := "Invalid Int command : Int Name = Value"
+	errMsg := "Invalid Int command : Int Name = IntValue"
 	varName := p.desk.Next()
 	if varName.Type != token.Word {
 		return nil, fmt.Errorf(errMsg)
@@ -398,17 +398,22 @@ func (p *Parser) readInt() (*node.Node, error) {
 	if !p.desk.IsLabel("=") {
 		return nil, fmt.Errorf(errMsg)
 	}
-	p.desk.Next() // skip "="
-	valueToken := p.desk.Next()
-	if valueToken.Type != token.Number {
-		return nil, fmt.Errorf(errMsg)
+	if p.desk.IsLabel("=") {
+		p.desk.Next() // skip "="
+		valueToken := p.desk.Next()
+		if valueToken.Type != token.Number {
+			return nil, fmt.Errorf(errMsg)
+		}
+		value, err := strconv.Atoi(valueToken.Label)
+		if err != nil {
+			return nil, fmt.Errorf(errMsg)
+		}
+		nodeInt := node.NewIntLet(varName.Label, value)
+		return nodeInt, nil
+	} else {
+		nodeInt := node.NewIntLet(varName.Label, 0)
+		return nodeInt, nil
 	}
-	value, err := strconv.Atoi(valueToken.Label)
-	if err != nil {
-		return nil, fmt.Errorf(errMsg)
-	}
-	nodeInt := node.NewIntLet(varName.Label, value)
-	return nodeInt, nil
 }
 
 // Parse convert to AST

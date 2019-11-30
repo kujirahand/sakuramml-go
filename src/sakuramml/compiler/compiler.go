@@ -6,6 +6,7 @@ import (
 	"sakuramml/node"
 	"sakuramml/parser"
 	"sakuramml/song"
+	"sakuramml/sutoton"
 	"sakuramml/token"
 )
 
@@ -28,11 +29,19 @@ func Compile(opt *Options) (*song.Song, error) {
 	// init
 	songObj := song.NewSong()
 	songObj.Debug = opt.Debug
+	// sutoton
+	if opt.Debug {
+		fmt.Println("--- sutoton ---")
+	}
+	src, err := sutoton.Convert(opt.Source)
+	if err != nil {
+		return nil, err
+	}
 	// lex
 	if opt.Debug {
 		fmt.Println("--- lex ---")
 	}
-	tokens, err := lexer.Lex(opt.Source)
+	tokens, err := lexer.Lex(src)
 	if err != nil {
 		return nil, err
 	}

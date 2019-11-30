@@ -3,6 +3,7 @@ package lexer
 import (
 	"log"
 	"sakuramml/token"
+	"sakuramml/utils"
 )
 
 // Lexer struct
@@ -51,16 +52,7 @@ func (l *Lexer) Peek() rune {
 
 // IsLabel func
 func (l *Lexer) IsLabel(s string) bool {
-	for i := 0; i < len(s); i++ {
-		ii := l.index + i
-		if ii >= l.length {
-			return false
-		}
-		if l.input[ii] != rune(s[i]) {
-			return false
-		}
-	}
-	return true
+	return utils.StrCompareKey(l.input, l.index, s)
 }
 
 // Next : Get current rune and inc index
