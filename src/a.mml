@@ -1,5 +1,6 @@
 // test
-Int V=50
+Int V=1+2*3
+PRINT(V)
 @V
 l1 cd
 q=V cd

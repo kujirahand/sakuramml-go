@@ -11,6 +11,7 @@ type Lexer struct {
 	input  []rune
 	index  int
 	length int
+	line   int
 	tokens token.Tokens
 }
 
@@ -24,6 +25,7 @@ func NewLexer(src string) *Lexer {
 // SetInput func
 func (l *Lexer) SetInput(src string) {
 	l.index = 0
+	l.line = 0
 	l.input = []rune(src)
 	l.length = len(l.input)
 	l.tokens = token.Tokens{}
@@ -74,7 +76,7 @@ func (l *Lexer) Move(n int) rune {
 	return l.Peek()
 }
 
-// IsSpace is check whilte space rune
+// IsSpace is check white space rune
 func IsSpace(c rune) bool {
 	return c == rune(' ') || c == rune('\t') || c == rune('\r') || c == rune('\n')
 }
@@ -85,6 +87,9 @@ func (l *Lexer) SkipSpace() {
 		ch := l.Peek()
 		if IsSpace(ch) {
 			l.index++
+			if ch == '\n' {
+				l.line++
+			}
 			continue
 		}
 		break
@@ -103,6 +108,7 @@ func (l *Lexer) readLineComment() string {
 	for l.HasNext() {
 		c := l.Next()
 		if c == rune('\n') {
+			l.line++
 			break
 		}
 		comment += string(c)
@@ -134,6 +140,9 @@ func (l *Lexer) readRangeComment() string {
 			}
 		}
 		c := l.Next()
+		if c == '\n' {
+			l.line++
+		}
 		comment += string(c)
 	}
 	return comment
@@ -164,6 +173,23 @@ func IsFlag(c rune) bool {
 
 func (l *Lexer) readWord() string {
 	if !IsUpper(l.Peek()) {
+		return ""
+	}
+	var s = ""
+	for l.HasNext() {
+		ch := l.Peek()
+		if IsUpper(ch) || IsLower(ch) || IsDigit(ch) || ch == rune('_') {
+			s += string(ch)
+			l.Next()
+		} else {
+			break
+		}
+	}
+	return s
+}
+
+func (l *Lexer) readMacro() string {
+	if l.Peek() != '#' {
 		return ""
 	}
 	var s = ""
@@ -228,9 +254,21 @@ func (l *Lexer) readOne() {
 		}
 	}
 	// Multi Byte Rune
-	if int(ch) > 0xFF {
+	if int(ch) > 0xFF { // ストトンで変換できなかったもの
 		l.appendToken(token.Word, string(ch))
 		l.Next()
+		return
+	}
+	// Macro
+	if ch == '#' {
+		w := l.readMacro()
+		l.appendToken(token.Macro, w)
+		return
+	}
+	// Str
+	if ch == '{' {
+		str := utils.StrGetToken(l.input, &l.index, "}")
+		l.appendToken(token.String, str)
 		return
 	}
 	// Lower Rune
@@ -249,28 +287,16 @@ func (l *Lexer) readOne() {
 		l.appendToken(token.Number, num)
 		return
 	}
-	switch ch {
-	case rune('('):
-		l.appendToken(token.ParenL, string(ch))
+	if IsFlag(ch) {
+		l.appendToken(token.Flag, string(ch))
 		l.Next()
 		return
-	case rune(')'):
-		l.appendToken(token.ParenR, string(ch))
-		l.Next()
-		return
-	default:
-		if IsFlag(ch) {
-			l.appendToken(token.Flag, string(ch))
-			l.Next()
-			return
-		}
-		//
 	}
-	log.Fatal("[ERROR] Unknown word: " + string(ch))
+	log.Fatal("[ERROR] Unknown char: " + string(ch))
 	l.Next()
 }
 func (l *Lexer) appendToken(tt token.TType, label string) {
-	t := token.Token{Type: tt, Label: label}
+	t := token.Token{Type: tt, Label: label, Line: l.line}
 	l.tokens = append(l.tokens, t)
 }
 

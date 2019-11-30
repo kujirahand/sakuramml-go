@@ -4,18 +4,18 @@ package token
 type TType string
 
 const (
-	// Comment : Token type
+	// Comment token
 	Comment TType = "comment"
-	// Word : Token type
+	// Word token
 	Word = "word"
-	// Number : Token type
+	// Macro token
+	Macro = "Macro"
+	// Number token
 	Number = "number"
-	// Flag : Token type
+	// Flag token
 	Flag = "flag"
-	// ParenL : Token type
-	ParenL = "("
-	// ParenR : Token type
-	ParenR = ")"
+	// String token
+	String = "string"
 )
 
 // Token struct

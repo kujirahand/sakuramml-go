@@ -44,8 +44,14 @@ const (
 	GetTrackLength = "GetTrackLength"
 	// CalcAdd const
 	CalcAdd = "CalcAdd"
+	// CalcSub const
+	CalcSub = "CalcSub"
 	// CalcMul const
 	CalcMul = "CalcMul"
+	// CalcDiv const
+	CalcDiv = "CalcDiv"
+	// CalcMod const
+	CalcMod = "CalcMod"
 	// NLenToStep const
 	NLenToStep = "NLenToStep"
 	// LoopBegin const
@@ -58,8 +64,12 @@ const (
 	IntLet = "IntLet"
 	// StrLet const
 	StrLet = "StrLet"
+	// PushStr const
+	PushStr = "PushStr"
 	// PushVariable const
 	PushVariable = "PushVariable"
+	// Print
+	Print = "Print"
 )
 
 // Node struct
@@ -71,6 +81,7 @@ type Node struct {
 	SValue string
 	NValue *Node
 	ExData interface{}
+	Line   int
 }
 
 func nodeToStringN(n *Node, level int) string {
@@ -92,11 +103,17 @@ func nodeToStringN(n *Node, level int) string {
 		case PushVariable:
 			params = fmt.Sprintf("%s", i.SValue)
 		case IntLet:
-			params = fmt.Sprintf("%s=%d", i.SValue, i.IValue)
+			params = fmt.Sprintf("%s", i.SValue)
 		}
 		s += tab + string(i.Type) + " " + params + "\n"
 		if i.NValue != nil {
 			s += nodeToStringN(i.NValue, level+1)
+		}
+		switch i.Type {
+		case CalcAdd, CalcSub, CalcMul, CalcDiv, CalcMod:
+			ex := i.ExData.([]*Node)
+			s += nodeToStringN(ex[0], level+1)
+			s += nodeToStringN(ex[1], level+1)
 		}
 		i = i.Next
 	}
@@ -573,39 +590,94 @@ func execLenDot(n *Node, s *song.Song) {
 // NewCalcAdd func
 func NewCalcAdd(lnode, rnode *Node) *Node {
 	n := NewNode(CalcAdd)
-	n.Exec = execCalcAdd
+	n.Exec = execCalc
+	n.SValue = "+"
 	n.ExData = []*Node{lnode, rnode}
 	return n
 }
-
-func execCalcAdd(n *Node, s *song.Song) {
-	ex := n.ExData.([]*Node)
-	lnode, rnode := ex[0], ex[1]
-	rnode.Exec(n, s)
-	rvalue := s.PopIValue()
-	lnode.Exec(n, s)
-	lvalue := s.PopIValue()
-	vv := rvalue + lvalue
-	s.PushIValue(vv)
+// NewCalcSub func
+func NewCalcSub(lnode, rnode *Node) *Node {
+	n := NewNode(CalcSub)
+	n.Exec = execCalc
+	n.SValue = "-"
+	n.ExData = []*Node{lnode, rnode}
+	return n
 }
-
 // NewCalcMul func
 func NewCalcMul(lnode, rnode *Node) *Node {
 	n := NewNode(CalcMul)
-	n.Exec = execCalcMul
+	n.Exec = execCalc
+	n.SValue = "*"
+	n.ExData = []*Node{lnode, rnode}
+	return n
+}
+// NewCalcDiv func
+func NewCalcDiv(lnode, rnode *Node) *Node {
+	n := NewNode(CalcDiv)
+	n.Exec = execCalc
+	n.SValue = "/"
+	n.ExData = []*Node{lnode, rnode}
+	return n
+}
+// NewCalcMod func
+func NewCalcMod(lnode, rnode *Node) *Node {
+	n := NewNode(CalcMod)
+	n.Exec = execCalc
+	n.SValue = "%"
 	n.ExData = []*Node{lnode, rnode}
 	return n
 }
 
-func execCalcMul(n *Node, s *song.Song) {
+func execCalc(n *Node, s *song.Song) {
 	ex := n.ExData.([]*Node)
 	lnode, rnode := ex[0], ex[1]
-	rnode.Exec(n, s)
-	rvalue := s.PopIValue()
-	lnode.Exec(n, s)
-	lvalue := s.PopIValue()
-	vv := rvalue * lvalue
-	s.PushIValue(vv)
+	rnode.Exec(rnode, s)
+	rvalue := s.PopStack()
+	lnode.Exec(lnode, s)
+	lvalue := s.PopStack()
+	switch n.SValue {
+	case "+":
+		switch rvalue.(type) {
+		case int:
+			iv := lvalue.(int) + rvalue.(int)
+			s.PushIValue(iv)
+		case string:
+			sv := lvalue.(string) + rvalue.(string)
+			s.PushSValue(sv)
+		}
+	case "-":
+		switch rvalue.(type) {
+		case int:
+			iv := lvalue.(int) - rvalue.(int)
+			s.PushIValue(iv)
+		case string:
+			s.PushSValue("")
+		}
+	case "*":
+		switch rvalue.(type) {
+		case int:
+			iv := lvalue.(int) * rvalue.(int)
+			s.PushIValue(iv)
+		case string:
+			s.PushSValue("")
+		}
+	case "/":
+		switch rvalue.(type) {
+		case int:
+			iv := lvalue.(int) / rvalue.(int)
+			s.PushIValue(iv)
+		case string:
+			s.PushSValue("")
+		}
+	case "%":
+		switch rvalue.(type) {
+		case int:
+			iv := lvalue.(int) % rvalue.(int)
+			s.PushIValue(iv)
+		case string:
+			s.PushSValue("")
+		}
+	}
 }
 
 // NewNLenToStep func
@@ -692,16 +764,64 @@ func execLoopBreak(n *Node, s *song.Song) {
 	}
 }
 
-func NewIntLet(name string, value int) *Node {
+func NewIntLet(name string, value *Node) *Node {
 	n := NewNode(IntLet)
 	n.SValue = name
-	n.IValue = value
+	n.NValue = value
 	n.Exec = execIntLet
 	return n
 }
 
 func execIntLet(n *Node, s *song.Song) {
 	varName := n.SValue
-	s.Variable.SetIValue(varName, n.IValue)
+	n.NValue.Exec(n.NValue, s)
+	s.Variable.SetIValue(varName, s.PopIValue())
 }
 
+func NewStrLet(name string, value *Node) *Node {
+	n := NewNode(StrLet)
+	n.SValue = name
+	n.NValue = value
+	n.Exec = execStrLet
+	return n
+}
+
+func execStrLet(n *Node, s *song.Song) {
+	varName := n.SValue
+	n.Exec(n, s)
+	s.Variable.SetSValue(varName, s.PopSValue())
+}
+
+func NewPushStr(v string) *Node {
+	n := NewNode(PushStr)
+	n.SValue = v
+	n.Exec = execPushStr
+	return n
+}
+
+func execPushStr(n *Node, s *song.Song) {
+	s.PushSValue(n.SValue)
+}
+
+func NewPrint(value *Node) *Node {
+	n := NewNode(Print)
+	n.NValue = value
+	n.Exec = execPrint
+	return n
+}
+
+func execPrint(n *Node, s *song.Song) {
+	log := ""
+	if n.NValue != nil {
+		n.NValue.Exec(n.NValue, s)
+		v := s.PopStack()
+		switch v.(type) {
+		case int:
+			log = fmt.Sprintf("%d", v)
+		case string:
+			log = v.(string)
+		}
+	}
+	vlog := fmt.Sprintf("[PRINT](%d): %s", n.Line, log)
+	fmt.Println(vlog)
+}

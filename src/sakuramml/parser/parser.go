@@ -79,10 +79,22 @@ func (p *Parser) readWord() (*node.Node, error) {
 		return node.NewNop(), nil
 	case "Int", "INT":
 		return p.readInt()
+	case "Str", "STR":
+		return p.readStr()
+	case "Print", "PRINT":
+		return p.readPrint()
 	default:
 		//
 	}
-	return nil, fmt.Errorf("[Error] (%d) Unknown Word : %s", t.Line, t.Label)
+	return nil, fmt.Errorf("[Error] (%d) Unknown Word : %s", t.Line + 1, t.Label)
+}
+func (p *Parser) readPrint() (*node.Node, error) {
+	pnode, err := p.readValue()
+	if err != nil {
+		return nil, err
+	}
+	n := node.NewPrint(pnode)
+	return n, nil
 }
 
 // Parse func
@@ -242,10 +254,108 @@ func (p *Parser) readLoopBreak() (*node.Node, error) {
 	return node.NewLoopBreak(), nil
 }
 
+func (p *Parser) calcExpr() (*node.Node, error) {
+	left, err := p.calcTerm()
+	if err != nil {
+		return nil, err
+	}
+	for p.desk.HasNext() {
+		if p.desk.IsLabel("+") {
+			p.desk.Next()
+			right, err := p.calcTerm()
+			if err != nil {
+				return nil, err
+			}
+			left = node.NewCalcAdd(left, right)
+			continue
+		}
+		if p.desk.IsLabel("-") {
+			p.desk.Next()
+			right, err := p.calcTerm()
+			if err != nil {
+				return nil, err
+			}
+			left = node.NewCalcSub(left, right)
+			continue
+		}
+		break
+	}
+	return left, nil
+}
+
+func (p *Parser) calcTerm() (*node.Node, error) {
+	left, err := p.calcFactor()
+	if err != nil {
+		return nil, err
+	}
+	for p.desk.HasNext() {
+		if p.desk.IsLabel("*") {
+			p.desk.Next()
+			right, err := p.calcFactor()
+			if err != nil {
+				return nil, err
+			}
+			left = node.NewCalcMul(left, right)
+			continue
+		}
+		if p.desk.IsLabel("/") {
+			p.desk.Next()
+			right, err := p.calcFactor()
+			if err != nil {
+				return nil, err
+			}
+			left = node.NewCalcDiv(left, right)
+			continue
+		}
+		if p.desk.IsLabel("%") {
+			p.desk.Next()
+			right, err := p.calcFactor()
+			if err != nil {
+				return nil, err
+			}
+			left = node.NewCalcMod(left, right)
+			continue
+		}
+		break
+	}
+	return left, nil
+}
+
+func (p *Parser) calcFactor() (*node.Node, error) {
+	t := p.desk.Peek()
+	// ( .. )
+	if p.desk.IsLabel("(") {
+		p.desk.Next()
+		left, err := p.calcExpr()
+		if err != nil {
+			return nil, err
+		}
+		if !p.desk.IsLabel(")") {
+			return nil, fmt.Errorf("[ERROR](%d) Calc ')' not found", t.Line)
+		}
+		p.desk.Next() // ")"
+		return left, nil
+	}
+	// simple value
+	left, err := p.readValue1()
+	if err != nil {
+		return nil, err
+	}
+	return left, nil
+}
+
 func (p *Parser) readValue() (*node.Node, error) {
 	if p.desk.IsLabel("=") {
 		p.desk.Next()
 	}
+	n, err := p.calcExpr()
+	if err != nil {
+		return nil, err
+	}
+	return n, nil
+}
+
+func (p *Parser) readValue1() (*node.Node, error) {
 	ct := p.desk.Peek()
 	if p.desk.IsType(token.Number) {
 		nn := node.NewNumber(ct.Label)
@@ -255,6 +365,10 @@ func (p *Parser) readValue() (*node.Node, error) {
 		wn := node.NewPushVariable(ct.Label)
 		p.desk.Next()
 		return wn, nil
+	} else if p.desk.IsType(token.String) {
+		sn := node.NewPushStr(ct.Label)
+		p.desk.Next()
+		return sn, nil
 	}
 	return nil, fmt.Errorf("not implement : %s", ct.Label)
 }
@@ -390,29 +504,48 @@ func (p *Parser) readSetLength() (*node.Node, error) {
 }
 
 func (p *Parser) readInt() (*node.Node, error) {
-	errMsg := "Invalid Int command : Int Name = IntValue"
+	errMsg := "[ERROR](%d) Invalid Int command : Int Name = Value"
 	varName := p.desk.Next()
 	if varName.Type != token.Word {
-		return nil, fmt.Errorf(errMsg)
-	}
-	if !p.desk.IsLabel("=") {
-		return nil, fmt.Errorf(errMsg)
+		return nil, fmt.Errorf(errMsg, varName.Line)
 	}
 	if p.desk.IsLabel("=") {
 		p.desk.Next() // skip "="
-		valueToken := p.desk.Next()
-		if valueToken.Type != token.Number {
-			return nil, fmt.Errorf(errMsg)
+		if !p.desk.IsType(token.Number) {
+			return nil, fmt.Errorf(errMsg, varName.Line)
 		}
-		value, err := strconv.Atoi(valueToken.Label)
+		value, err := p.readValue()
 		if err != nil {
-			return nil, fmt.Errorf(errMsg)
+			return nil, err
 		}
 		nodeInt := node.NewIntLet(varName.Label, value)
 		return nodeInt, nil
 	} else {
-		nodeInt := node.NewIntLet(varName.Label, 0)
+		nodeInt := node.NewIntLet(varName.Label, node.NewNumber("0"))
 		return nodeInt, nil
+	}
+}
+
+func (p *Parser) readStr() (*node.Node, error) {
+	errMsg := "[ERROR](%d) Invalid Str command : Str Name = {Value}"
+	varName := p.desk.Next()
+	if varName.Type != token.Word {
+		return nil, fmt.Errorf(errMsg, varName.Line)
+	}
+	if !p.desk.IsLabel("=") {
+		return nil, fmt.Errorf(errMsg, varName.Line)
+	}
+	if p.desk.IsLabel("=") {
+		p.desk.Next() // skip "="
+		nodeValue, err := p.readValue()
+		if err != nil {
+			return nil, fmt.Errorf(errMsg, varName.Line)
+		}
+		nodeStr := node.NewStrLet(varName.Label, nodeValue)
+		return nodeStr, nil
+	} else {
+		nodeStr := node.NewStrLet(varName.Label, node.NewPushStr(""))
+		return nodeStr, nil
 	}
 }
 

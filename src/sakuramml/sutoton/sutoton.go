@@ -122,6 +122,15 @@ func (conv *Converter)Convert(text string) (string, error) {
 					continue
 				}
 			}
+			if c == '{' {
+				// 明示的文字列はストトンで置換しない
+				if utils.StrCompareKey(src, i, "{\"") {
+					str := utils.StrGetToken(src, &i, "\"}")
+					res += str + "\"}"
+					line += utils.CountKey(str, "\n")
+					continue
+				}
+			}
 			if c == '~' {
 				// Sutoton New Sutoton
 				if utils.StrCompareKey(src, i, "~{") {
@@ -129,12 +138,12 @@ func (conv *Converter)Convert(text string) (string, error) {
 					key := utils.StrGetToken(src, &i, "}")
 					utils.StrSkipSpace(src, &i)
 					if src[i] != '=' { // 定義ではなかった?!
-						return "", fmt.Errorf("[ERROR](%d)ストトン{%s}の定義エラー", line, key)
+						return "", fmt.Errorf("[ERROR](%d)ストトン{%s}の定義エラー", line+1, key)
  					}
  					i++ // skip "="
  					utils.StrSkipSpace(src, &i)
 					if src[i] != '{' {
-						return "", fmt.Errorf("[ERROR](%d)ストトン{%s}の定義エラー", line, key)
+						return "", fmt.Errorf("[ERROR](%d)ストトン{%s}の定義エラー", line+1, key)
 					}
 					i++ // skip "{"
 					value := utils.StrGetToken(src, &i, "}")
