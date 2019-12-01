@@ -15,6 +15,9 @@ type LoopItem struct {
 	EndNode   interface{} // Node
 }
 
+// EvalFunc type
+type EvalStrFunc func (song *Song, src string) error
+
 // Song is info of song, include tracks
 type Song struct {
 	Debug     bool
@@ -26,6 +29,7 @@ type Song struct {
 	LoopStack []*LoopItem
 	MoveNode  interface{} // Node
 	Variable  *variable.Variable
+	Eval      EvalStrFunc
 }
 
 // NewSong func

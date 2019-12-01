@@ -107,6 +107,14 @@ func (vv *Variable) GetSValue(name string, def string) string {
 	}
 }
 
+func (vv *Variable) Exists(name string) bool {
+	v := vv.GetValue(name)
+	if v == nil {
+		return false
+	}
+	return true
+}
+
 func (vv *Variable) SetIValue(name string, value int) {
 	vv.values[name] = NewValueInt(value)
 }

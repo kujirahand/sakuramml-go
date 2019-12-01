@@ -64,6 +64,8 @@ const (
 	IntLet = "IntLet"
 	// StrLet const
 	StrLet = "StrLet"
+	// StrEval const
+	StrEval = "StrEval"
 	// PushStr const
 	PushStr = "PushStr"
 	// PushVariable const
@@ -72,11 +74,14 @@ const (
 	Print = "Print"
 )
 
+// ExecFunc
+type ExecFunc func (n *Node, s *song.Song) error
+
 // Node struct
 type Node struct {
 	Type   NType
 	Next   *Node
-	Exec   func(n *Node, s *song.Song)
+	Exec   ExecFunc
 	IValue int
 	SValue string
 	NValue *Node
@@ -166,9 +171,10 @@ func NewNode(nodeType NType) *Node {
 	return &n
 }
 
-func execNone(n *Node, s *song.Song) {
-	err := fmt.Errorf("Exec failed, not implemented : %v", *n)
-	panic(err)
+func execNone(n *Node, s *song.Song) error {
+	err := fmt.Errorf("ExecFunc failed, not implemented : %v", *n)
+	panic(err) // FOR SYSTEM
+	return err
 }
 
 // NewNop func
@@ -177,8 +183,8 @@ func NewNop() *Node {
 	t.Exec = execNop
 	return t
 }
-func execNop(n *Node, s *song.Song) {
-	// nop
+func execNop(n *Node, s *song.Song) error {
+	return nil
 }
 
 // NewComment func
@@ -188,13 +194,14 @@ func NewComment(text string) *Node {
 	t.SValue = text
 	return t
 }
-func execComment(n *Node, s *song.Song) {
+func execComment(n *Node, s *song.Song) error {
 	tr := s.CurTrack()
 	tb := []byte(n.SValue)
 	if len(tb) > 255 {
 		tb = tb[0:255]
 	}
 	tr.AddMeta(tr.Time, 0x01, tb)
+	return nil
 }
 
 // NewNoteOn func (NoteOn and Rest)
@@ -212,7 +219,7 @@ func NewNoteOn(note string, ex *ExDataNoteOn) *Node {
 	return n
 }
 
-func execNoteOn(n *Node, s *song.Song) {
+func execNoteOn(n *Node, s *song.Song) error {
 	tr := s.CurTrack()
 	noteno := 0
 	length := tr.Length
@@ -277,6 +284,7 @@ func execNoteOn(n *Node, s *song.Song) {
 		tr.AddNoteOn(tr.Time, noteno, velocity, qlen)
 	}
 	tr.Time += length
+	return nil
 }
 
 // NewNumber func
@@ -303,8 +311,9 @@ func NewNumberInt(no int) *Node {
 	return n
 }
 
-func execPushIValue(n *Node, s *song.Song) {
+func execPushIValue(n *Node, s *song.Song) error {
 	s.PushIValue(n.IValue)
+	return nil
 }
 
 // NewPushVariable func
@@ -318,10 +327,11 @@ func NewPushVariable(word string) *Node {
 	return n
 }
 
-func execPushVariable(n *Node, s *song.Song) {
+func execPushVariable(n *Node, s *song.Song) error {
 	word := n.SValue
 	value := s.Variable.GetValue(word)
 	s.PushValue(value)
+	return nil
 }
 
 
@@ -333,11 +343,12 @@ func NewSetTrack(v *Node, opt string) *Node {
 	n.NValue = v
 	return n
 }
-func execSetTrack(n *Node, s *song.Song) {
+func execSetTrack(n *Node, s *song.Song) error {
 	// get track no
 	n.NValue.Exec(n.NValue, s)
 	// set new value
 	s.TrackNo = calcFlagValue(s.TrackNo, s.PopIValue(), n.SValue)
+	return nil
 }
 
 func calcFlagValue(cur, no int, opt string) int {
@@ -369,7 +380,7 @@ func NewSetOctave(v *Node, opt string) *Node {
 	return n
 }
 
-func execSetOctave(n *Node, s *song.Song) {
+func execSetOctave(n *Node, s *song.Song) error {
 	tr := s.CurTrack()
 	no := 0
 	if n.NValue != nil {
@@ -380,6 +391,7 @@ func execSetOctave(n *Node, s *song.Song) {
 	if tr.Octave > 10 {
 		tr.Octave = 10
 	}
+	return nil
 }
 
 // NewSetVelocity func
@@ -391,13 +403,14 @@ func NewSetVelocity(v *Node, opt string) *Node {
 	return n
 }
 
-func execSetVelocity(n *Node, s *song.Song) {
+func execSetVelocity(n *Node, s *song.Song) error {
 	n.NValue.Exec(n.NValue, s)
 	tr := s.CurTrack()
 	tr.Velocity = calcFlagValue(tr.Velocity, s.PopIValue(), n.SValue)
 	if tr.Velocity > 127 {
 		tr.Velocity = 127
 	}
+	return nil
 }
 
 // NewSetQgate func
@@ -409,7 +422,7 @@ func NewSetQgate(v *Node, opt string) *Node {
 	return n
 }
 
-func execSetQgate(n *Node, s *song.Song) {
+func execSetQgate(n *Node, s *song.Song) error {
 	n.NValue.Exec(n.NValue, s)
 	tr := s.CurTrack()
 	opt := n.SValue
@@ -427,6 +440,7 @@ func execSetQgate(n *Node, s *song.Song) {
 	if tr.Qgate < 1 {
 		tr.Qgate = 1
 	}
+	return nil
 }
 
 // NewSetTempo func
@@ -438,12 +452,13 @@ func NewSetTempo(v *Node, opt string) *Node {
 	return n
 }
 
-func execSetTempo(n *Node, s *song.Song) {
+func execSetTempo(n *Node, s *song.Song) error {
 	n.NValue.Exec(n.NValue, s)
 	s.Tempo = calcFlagValue(s.Tempo, s.PopIValue(), n.SValue)
 	s.Tempo = utils.InRange(10, s.Tempo, 1500)
 	trk := s.CurTrack()
 	trk.AddTempo(trk.Time, s.Tempo)
+	return nil
 }
 
 // NewSetPitchBend func
@@ -455,7 +470,7 @@ func NewSetPitchBend(v *Node, opt string) *Node {
 	return n
 }
 
-func execSetPitchBend(n *Node, s *song.Song) {
+func execSetPitchBend(n *Node, s *song.Song) error {
 	tr := s.CurTrack()
 	n.NValue.Exec(n.NValue, s)
 	opt := n.SValue
@@ -470,6 +485,7 @@ func execSetPitchBend(n *Node, s *song.Song) {
 		pb = utils.InRange(0, pb, 127)
 		tr.AddPitchBendEasy(tr.Time, tr.PitchBend)
 	}
+	return nil
 }
 
 // ExDataPC for SetPC
@@ -487,7 +503,7 @@ func NewSetPC(v *Node, msb, lsb int) *Node {
 	return n
 }
 
-func execSetPC(n *Node, s *song.Song) {
+func execSetPC(n *Node, s *song.Song) error {
 	// track
 	tr := s.CurTrack()
 	// value
@@ -509,6 +525,7 @@ func execSetPC(n *Node, s *song.Song) {
 			"- Time(%s) TR=%-2d @%d,%d, %d\n",
 			s.TimePtrToStr(tr.Time), s.TrackNo, no+1, ex.MSB, ex.LSB)
 	}
+	return nil
 }
 
 // NewLength func
@@ -518,7 +535,7 @@ func NewLength() *Node {
 	return n
 }
 
-func execLength(n *Node, s *song.Song) {
+func execLength(n *Node, s *song.Song) error {
 	// calc length
 	length := 0
 	nvalue := n.NValue
@@ -539,6 +556,7 @@ func execLength(n *Node, s *song.Song) {
 		}
 	}
 	s.PushIValue(length)
+	return nil
 }
 
 // NewSetLength func
@@ -549,11 +567,12 @@ func NewSetLength(lenNode *Node) *Node {
 	return n
 }
 
-func execSetLength(n *Node, s *song.Song) {
+func execSetLength(n *Node, s *song.Song) error {
 	n.NValue.Exec(n, s)
 	ilen := s.PopIValue()
 	// println("execSetLength=", ilen)
 	s.CurTrack().Length = ilen
+	return nil
 }
 
 // NewGetTrackLength func
@@ -563,8 +582,9 @@ func NewGetTrackLength() *Node {
 	return n
 }
 
-func execGetTrackLength(n *Node, s *song.Song) {
+func execGetTrackLength(n *Node, s *song.Song) error {
 	s.PushIValue(s.CurTrack().Length)
+	return nil
 }
 
 // NewLengthDot func
@@ -576,7 +596,7 @@ func NewLengthDot(nLen *Node) *Node {
 	return n
 }
 
-func execLenDot(n *Node, s *song.Song) {
+func execLenDot(n *Node, s *song.Song) error {
 	rate := n.ExData.(float64)
 	// get number
 	n.NValue.Exec(n.NValue, s)
@@ -585,6 +605,7 @@ func execLenDot(n *Node, s *song.Song) {
 	vv := int(float64(iv) * rate)
 	s.PushIValue(vv)
 	// println("dot=", iv, rate, vv)
+	return nil
 }
 
 // NewCalcAdd func
@@ -628,7 +649,33 @@ func NewCalcMod(lnode, rnode *Node) *Node {
 	return n
 }
 
-func execCalc(n *Node, s *song.Song) {
+func toInt(v interface{}) int {
+	switch v.(type) {
+	case int:
+		return v.(int)
+	case string:
+		iv, err := strconv.Atoi(v.(string))
+		if err != nil {
+			return 0
+		}
+		return iv
+	default:
+		return 0
+	}
+}
+
+func toStr(v interface{}) string {
+	switch v.(type) {
+	case int:
+		return strconv.Itoa(v.(int))
+	case string:
+		return v.(string)
+	default:
+		return ""
+	}
+}
+
+func execCalc(n *Node, s *song.Song) error {
 	ex := n.ExData.([]*Node)
 	lnode, rnode := ex[0], ex[1]
 	rnode.Exec(rnode, s)
@@ -639,16 +686,16 @@ func execCalc(n *Node, s *song.Song) {
 	case "+":
 		switch rvalue.(type) {
 		case int:
-			iv := lvalue.(int) + rvalue.(int)
+			iv := toInt(lvalue) + toInt(rvalue)
 			s.PushIValue(iv)
 		case string:
-			sv := lvalue.(string) + rvalue.(string)
+			sv := toStr(lvalue) + toStr(rvalue)
 			s.PushSValue(sv)
 		}
 	case "-":
 		switch rvalue.(type) {
 		case int:
-			iv := lvalue.(int) - rvalue.(int)
+			iv := toInt(lvalue) - toInt(rvalue)
 			s.PushIValue(iv)
 		case string:
 			s.PushSValue("")
@@ -656,7 +703,7 @@ func execCalc(n *Node, s *song.Song) {
 	case "*":
 		switch rvalue.(type) {
 		case int:
-			iv := lvalue.(int) * rvalue.(int)
+			iv := toInt(lvalue) * toInt(rvalue)
 			s.PushIValue(iv)
 		case string:
 			s.PushSValue("")
@@ -664,7 +711,7 @@ func execCalc(n *Node, s *song.Song) {
 	case "/":
 		switch rvalue.(type) {
 		case int:
-			iv := lvalue.(int) / rvalue.(int)
+			iv := toInt(lvalue) / toInt(rvalue)
 			s.PushIValue(iv)
 		case string:
 			s.PushSValue("")
@@ -672,12 +719,13 @@ func execCalc(n *Node, s *song.Song) {
 	case "%":
 		switch rvalue.(type) {
 		case int:
-			iv := lvalue.(int) % rvalue.(int)
+			iv := toInt(lvalue) % toInt(rvalue)
 			s.PushIValue(iv)
 		case string:
 			s.PushSValue("")
 		}
 	}
+	return nil
 }
 
 // NewNLenToStep func
@@ -688,7 +736,7 @@ func NewNLenToStep(valueNode *Node) *Node {
 	return n
 }
 
-func execNLenToStep(n *Node, s *song.Song) {
+func execNLenToStep(n *Node, s *song.Song) error {
 	// get n value
 	nValue := n.NValue
 	nValue.Exec(nValue, s)
@@ -696,6 +744,7 @@ func execNLenToStep(n *Node, s *song.Song) {
 	// convert to step
 	vStep := int((4.0 / float64(v)) * float64(s.Timebase))
 	s.PushIValue(vStep)
+	return nil
 }
 
 // NewLoopBegin func
@@ -706,7 +755,7 @@ func NewLoopBegin(loopValue *Node) *Node {
 	return n
 }
 
-func execLoopBegin(n *Node, s *song.Song) {
+func execLoopBegin(n *Node, s *song.Song) error {
 	loopValue := n.NValue
 	loopValue.Exec(loopValue, s)
 	loopCount := s.PopIValue()
@@ -728,6 +777,7 @@ func execLoopBegin(n *Node, s *song.Song) {
 		EndNode:   endPoint.Next,
 	}
 	s.PushLoop(&loop)
+	return nil
 }
 
 // NewLoopEnd func
@@ -737,15 +787,16 @@ func NewLoopEnd() *Node {
 	return n
 }
 
-func execLoopEnd(n *Node, s *song.Song) {
+func execLoopEnd(n *Node, s *song.Song) error {
 	loop := s.PeekLoop()
 	loop.Index++
 	if loop.Index == loop.Count {
 		s.PopLoop()
-		return
+		return nil
 	}
 	// back to begin node
 	s.MoveNode = loop.BeginNode
+	return nil
 }
 
 // NewLoopBreak func
@@ -755,13 +806,14 @@ func NewLoopBreak() *Node {
 	return n
 }
 
-func execLoopBreak(n *Node, s *song.Song) {
+func execLoopBreak(n *Node, s *song.Song) error {
 	loop := s.PeekLoop()
 	// last one time?
 	if loop.Index == loop.Count-1 {
 		// go to last
 		s.MoveNode = loop.EndNode
 	}
+	return nil
 }
 
 func NewIntLet(name string, value *Node) *Node {
@@ -772,10 +824,11 @@ func NewIntLet(name string, value *Node) *Node {
 	return n
 }
 
-func execIntLet(n *Node, s *song.Song) {
+func execIntLet(n *Node, s *song.Song) error {
 	varName := n.SValue
 	n.NValue.Exec(n.NValue, s)
 	s.Variable.SetIValue(varName, s.PopIValue())
+	return nil
 }
 
 func NewStrLet(name string, value *Node) *Node {
@@ -786,10 +839,26 @@ func NewStrLet(name string, value *Node) *Node {
 	return n
 }
 
-func execStrLet(n *Node, s *song.Song) {
+func execStrLet(n *Node, s *song.Song) error {
 	varName := n.SValue
 	n.Exec(n, s)
 	s.Variable.SetSValue(varName, s.PopSValue())
+	return nil
+}
+
+func NewStrEval(name string) *Node {
+	n := NewNode(StrEval)
+	n.SValue = name
+	n.Exec = execStrEval
+	return n
+}
+
+func execStrEval(n *Node, s *song.Song) error {
+	name := n.SValue
+	value := s.Variable.GetSValue(name, "")
+	// eval
+	err := s.Eval(s, value)
+	return err
 }
 
 func NewPushStr(v string) *Node {
@@ -799,8 +868,9 @@ func NewPushStr(v string) *Node {
 	return n
 }
 
-func execPushStr(n *Node, s *song.Song) {
+func execPushStr(n *Node, s *song.Song) error {
 	s.PushSValue(n.SValue)
+	return nil
 }
 
 func NewPrint(value *Node) *Node {
@@ -810,7 +880,7 @@ func NewPrint(value *Node) *Node {
 	return n
 }
 
-func execPrint(n *Node, s *song.Song) {
+func execPrint(n *Node, s *song.Song) error {
 	log := ""
 	if n.NValue != nil {
 		n.NValue.Exec(n.NValue, s)
@@ -824,4 +894,5 @@ func execPrint(n *Node, s *song.Song) {
 	}
 	vlog := fmt.Sprintf("[PRINT](%d): %s", n.Line, log)
 	fmt.Println(vlog)
+	return nil
 }

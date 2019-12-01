@@ -3,9 +3,10 @@ package parser
 import (
 	"fmt"
 	"sakuramml/node"
-	"sakuramml/track"
 	"sakuramml/token"
+	"sakuramml/track"
 	"sakuramml/utils"
+	"sakuramml/variable"
 	"strconv"
 )
 
@@ -15,6 +16,7 @@ type Parser struct {
 	harmonyStack []*node.Node
 	Top  *node.Node
 	Last *node.Node
+	Variable *variable.Variable // temporary variable def
 }
 
 // NewParser func
@@ -25,6 +27,7 @@ func NewParser(tokens token.Tokens) *Parser {
 	nop := node.NewNop()
 	p.Top = nop
 	p.Last = p.Top
+	p.Variable = variable.NewVariable()
 	return &p
 }
 
@@ -84,7 +87,11 @@ func (p *Parser) readWord() (*node.Node, error) {
 	case "Print", "PRINT":
 		return p.readPrint()
 	default:
-		//
+		// eval
+		varName := t.Label
+		if p.Variable.Exists(varName) {
+			return node.NewStrEval(varName), nil
+		}
 	}
 	return nil, fmt.Errorf("[Error] (%d) Unknown Word : %s", t.Line + 1, t.Label)
 }
@@ -107,6 +114,13 @@ func (p *Parser) Parse() (*node.Node, error) {
 		switch tok.Type {
 		case token.Word, token.Flag:
 			nod, err = p.readWord()
+			if err != nil {
+				return nil, err
+			}
+			p.appendNode(nod)
+			continue
+		case token.Macro:
+			nod, err = p.readMacro()
 			if err != nil {
 				return nil, err
 			}
@@ -361,7 +375,7 @@ func (p *Parser) readValue1() (*node.Node, error) {
 		nn := node.NewNumber(ct.Label)
 		p.desk.Next()
 		return nn, nil
-	} else if p.desk.IsType(token.Word) {
+	} else if p.desk.IsType(token.Word) || p.desk.IsType(token.Macro) {
 		wn := node.NewPushVariable(ct.Label)
 		p.desk.Next()
 		return wn, nil
@@ -509,6 +523,8 @@ func (p *Parser) readInt() (*node.Node, error) {
 	if varName.Type != token.Word {
 		return nil, fmt.Errorf(errMsg, varName.Line)
 	}
+	name := varName.Label
+	var nodeInt *node.Node
 	if p.desk.IsLabel("=") {
 		p.desk.Next() // skip "="
 		if !p.desk.IsType(token.Number) {
@@ -518,12 +534,12 @@ func (p *Parser) readInt() (*node.Node, error) {
 		if err != nil {
 			return nil, err
 		}
-		nodeInt := node.NewIntLet(varName.Label, value)
-		return nodeInt, nil
+		nodeInt = node.NewIntLet(varName.Label, value)
 	} else {
-		nodeInt := node.NewIntLet(varName.Label, node.NewNumber("0"))
-		return nodeInt, nil
+		nodeInt = node.NewIntLet(varName.Label, node.NewNumber("0"))
 	}
+	p.Variable.SetIValue(name, 0) // temporary set variable
+	return nodeInt, nil
 }
 
 func (p *Parser) readStr() (*node.Node, error) {
@@ -535,17 +551,42 @@ func (p *Parser) readStr() (*node.Node, error) {
 	if !p.desk.IsLabel("=") {
 		return nil, fmt.Errorf(errMsg, varName.Line)
 	}
+	var nodeStr *node.Node
+	name := varName.Label
 	if p.desk.IsLabel("=") {
 		p.desk.Next() // skip "="
 		nodeValue, err := p.readValue()
 		if err != nil {
 			return nil, fmt.Errorf(errMsg, varName.Line)
 		}
-		nodeStr := node.NewStrLet(varName.Label, nodeValue)
+		nodeStr = node.NewStrLet(name, nodeValue)
+	} else {
+		nodeStr = node.NewStrLet(name, node.NewPushStr(""))
+	}
+	p.Variable.SetSValue(name, "") // temporary set variable
+	return nodeStr, nil
+}
+
+func (p *Parser) readMacro() (*node.Node, error) {
+	errMsg := "[ERROR](%d) Invalid Macro command"
+	// check name
+	macroName := p.desk.Next()
+	if macroName.Type != token.Macro {
+		return nil, fmt.Errorf(errMsg, macroName.Line)
+	}
+	// call or define
+	if p.desk.IsLabel("=") { // DEFINE MACRO
+		p.desk.Next() // skip "="
+		nodeValue, err := p.readValue()
+		if err != nil {
+			return nil, err
+		}
+		nodeStr := node.NewStrLet(macroName.Label, nodeValue)
 		return nodeStr, nil
 	} else {
-		nodeStr := node.NewStrLet(varName.Label, node.NewPushStr(""))
-		return nodeStr, nil
+		// Call macro
+		callNode := node.NewStrEval(macroName.Label)
+		return callNode, nil
 	}
 }
 

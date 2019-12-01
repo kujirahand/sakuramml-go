@@ -24,11 +24,45 @@ type Options struct {
 	Outfile  string
 }
 
+
+// Eval func
+func Eval(song *song.Song, src string) error {
+	// lex
+	tokens, err := lexer.Lex(src)
+	if err != nil {
+		return err
+	}
+	// parse
+	topNode, err := parser.Parse(tokens)
+	if err != nil {
+		return err
+	}
+	// run
+	return Run(topNode, song)
+}
+
+// Run func
+func Run(topNode *node.Node, song *song.Song) error {
+	curNode := topNode
+	for curNode != nil {
+		// if opt.Debug { fmt.Println(curNode.Type) }
+		curNode.Exec(curNode, song)
+		if song.MoveNode != nil {
+			curNode = song.MoveNode.(*node.Node)
+			song.MoveNode = nil
+			continue
+		}
+		curNode = curNode.Next
+	}
+	return nil
+}
+
 // Compile MML
 func Compile(opt *Options) (*song.Song, error) {
 	// init
 	songObj := song.NewSong()
 	songObj.Debug = opt.Debug
+	songObj.Eval = Eval // Set Eval Func
 	// sutoton
 	if opt.Debug {
 		fmt.Println("--- sutoton ---")
@@ -63,17 +97,13 @@ func Compile(opt *Options) (*song.Song, error) {
 	if opt.Debug {
 		fmt.Println("--- exec ---")
 	}
-	curNode := topNode
-	for curNode != nil {
-		// if opt.Debug { fmt.Println(curNode.Type) }
-		curNode.Exec(curNode, songObj)
-		if songObj.MoveNode != nil {
-			curNode = songObj.MoveNode.(*node.Node)
-			songObj.MoveNode = nil
-			continue
-		}
-		curNode = curNode.Next
-	}
 	// fmt.Println(s.ToString())
+	for {
+		err := Run(topNode, songObj)
+		if err != nil {
+			return nil, err
+		}
+		break
+	}
 	return songObj, nil
 }
