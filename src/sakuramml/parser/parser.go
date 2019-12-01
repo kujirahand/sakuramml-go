@@ -527,9 +527,6 @@ func (p *Parser) readInt() (*node.Node, error) {
 	var nodeInt *node.Node
 	if p.desk.IsLabel("=") {
 		p.desk.Next() // skip "="
-		if !p.desk.IsType(token.Number) {
-			return nil, fmt.Errorf(errMsg, varName.Line)
-		}
 		value, err := p.readValue()
 		if err != nil {
 			return nil, err

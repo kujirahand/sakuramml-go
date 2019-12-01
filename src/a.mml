@@ -1,5 +1,5 @@
 // test
-Int V=1+2*3
+Int V=(1+2*3)*10
 PRINT(V)
 @V
 l1 cd
