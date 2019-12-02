@@ -107,7 +107,9 @@ func nodeToStringN(n *Node, level int) string {
 			params = fmt.Sprintf("%d", i.IValue)
 		case PushVariable:
 			params = fmt.Sprintf("%s", i.SValue)
-		case IntLet:
+		case IntLet, StrLet:
+			params = fmt.Sprintf("%s", i.SValue)
+		case PushStr:
 			params = fmt.Sprintf("%s", i.SValue)
 		}
 		s += tab + string(i.Type) + " " + params + "\n"
@@ -841,7 +843,8 @@ func NewStrLet(name string, value *Node) *Node {
 
 func execStrLet(n *Node, s *song.Song) error {
 	varName := n.SValue
-	n.Exec(n, s)
+	valueNode := n.NValue
+	valueNode.Exec(valueNode, s)
 	s.Variable.SetSValue(varName, s.PopSValue())
 	return nil
 }

@@ -1,9 +1,10 @@
 // test
 Int V=(1+2*3)*10
 PRINT(V)
-@V
-l1 cd
-q=V cd
+Str AA = {cdeg}
+
+PRINT(AA)
+AA;
 
 /*
 TR(1) l4 cdef | gfed | c^^^

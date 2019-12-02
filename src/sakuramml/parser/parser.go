@@ -78,7 +78,7 @@ func (p *Parser) readWord() (*node.Node, error) {
 		return p.readLoopEnd()
 	case ":":
 		return p.readLoopBreak()
-	case "|":
+	case "|", ";":
 		return node.NewNop(), nil
 	case "Int", "INT":
 		return p.readInt()
@@ -571,6 +571,7 @@ func (p *Parser) readMacro() (*node.Node, error) {
 	if macroName.Type != token.Macro {
 		return nil, fmt.Errorf(errMsg, macroName.Line)
 	}
+	// todo: 引数付き文字列マクロ https://sakuramml.com/doc/kouza/mml4.htm
 	// call or define
 	if p.desk.IsLabel("=") { // DEFINE MACRO
 		p.desk.Next() // skip "="

@@ -26,3 +26,7 @@ func TestLex2(t *testing.T) {
 	lexExec(t, "/* cde */", "")
 	lexExec(t, "///hello\ncde", "/*hello*/ c d e")
 }
+
+func TestLex3(t *testing.T) {
+	lexExec(t, "STR A = {cde}", "STR A = cde")
+}

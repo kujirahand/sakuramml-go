@@ -267,6 +267,7 @@ func (l *Lexer) readOne() {
 	}
 	// Str
 	if ch == '{' {
+		l.index++
 		str := utils.StrGetToken(l.input, &l.index, "}")
 		l.appendToken(token.String, str)
 		return
