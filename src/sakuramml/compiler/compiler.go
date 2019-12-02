@@ -45,8 +45,12 @@ func Eval(song *song.Song, src string) error {
 func Run(topNode *node.Node, song *song.Song) error {
 	curNode := topNode
 	for curNode != nil {
-		// if opt.Debug { fmt.Println(curNode.Type) }
-		curNode.Exec(curNode, song)
+		// Run Node
+		err := curNode.Exec(curNode, song)
+		if err != nil {
+			return err
+		}
+		// Force Change Node?
 		if song.MoveNode != nil {
 			curNode = song.MoveNode.(*node.Node)
 			song.MoveNode = nil

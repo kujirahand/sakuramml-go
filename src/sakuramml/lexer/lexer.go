@@ -267,8 +267,7 @@ func (l *Lexer) readOne() {
 	}
 	// Str
 	if ch == '{' {
-		l.index++
-		str := utils.StrGetToken(l.input, &l.index, "}")
+		str := l.readNestString()
 		l.appendToken(token.String, str)
 		return
 	}
@@ -296,6 +295,32 @@ func (l *Lexer) readOne() {
 	log.Fatal("[ERROR] Unknown char: " + string(ch))
 	l.Next()
 }
+
+func (l *Lexer) readNestString() string {
+	if l.Peek() != '{' {
+		return ""
+	}
+
+	l.index++ // skip {
+	level := 1
+	res := ""
+	for l.HasNext() {
+		c := l.Next()
+		if c == '}' {
+			level--
+			if level <= 0 {
+				break
+			}
+		} else if c == '{' {
+			level++
+		} else if c == '\n' {
+			l.line++
+		}
+		res += string(c)
+	}
+	return res
+}
+
 func (l *Lexer) appendToken(tt token.TType, label string) {
 	t := token.Token{Type: tt, Label: label, Line: l.line}
 	l.tokens = append(l.tokens, t)

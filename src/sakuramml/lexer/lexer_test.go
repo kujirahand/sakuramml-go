@@ -28,5 +28,10 @@ func TestLex2(t *testing.T) {
 }
 
 func TestLex3(t *testing.T) {
+	// string
 	lexExec(t, "STR A = {cde}", "STR A = cde")
+	// string2
+	lexExec(t, "STR B = {cde} abc", "STR B = cde a b c")
+	// nest string
+	lexExec(t, "STR C = {Div{cde}} c", "STR C = Div{cde} c")
 }
