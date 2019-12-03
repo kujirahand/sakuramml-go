@@ -1,3 +1,8 @@
+/*
+当面の目標 - チュートリアルのコードを動くようにする
+https://sakuramml.com/doc/faq/faq02.htm#1
+*/
+
 // test
 Int V=(1+2*3)*10
 PRINT(V)
