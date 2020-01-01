@@ -12,11 +12,12 @@ import (
 
 // Parser struct
 type Parser struct {
-	desk         token.Desk
-	harmonyStack []*node.Node
-	Top          *node.Node
-	Last         *node.Node
-	Variable     *variable.Variable // temporary variable def
+	desk          token.Desk
+	harmonyStack  []*node.Node
+	isHarmonyMode bool
+	Top           *node.Node
+	Last          *node.Node
+	Variable      *variable.Variable // temporary variable def
 }
 
 // NewParser func
@@ -28,6 +29,7 @@ func NewParser(tokens token.Tokens) *Parser {
 	p.Top = nop
 	p.Last = p.Top
 	p.Variable = variable.NewVariable()
+	p.isHarmonyMode = false
 	return &p
 }
 
@@ -70,6 +72,8 @@ func (p *Parser) readWord() (*node.Node, error) {
 			return p.readLoopBreak()
 		case '|', ';':
 			return node.NewNop(), nil
+		case '\'':
+			return p.readHarmonyFlag()
 		}
 	}
 
@@ -153,7 +157,7 @@ func (p *Parser) readNoteOn(t *token.Token) (*node.Node, error) {
 	var err error
 	ex := node.ExDataNoteOn{}
 	n := node.NewNoteOn(t.Label, &ex)
-	isHarmony := false
+	isHarmonyZero := false
 	// n command ?
 	if t.Label == "n" {
 		noteNoNode, err := p.readValue()
@@ -184,7 +188,7 @@ func (p *Parser) readNoteOn(t *token.Token) (*node.Node, error) {
 		if p.desk.IsLabel("0") {
 			p.desk.Next() // skip "0"
 			p.harmonyStack = append(p.harmonyStack, n)
-			isHarmony = true
+			isHarmonyZero = true
 		} else {
 			nLen, err := p.readLength()
 			if err != nil {
@@ -226,9 +230,15 @@ func (p *Parser) readNoteOn(t *token.Token) (*node.Node, error) {
 			}
 		}
 	}
-	// Check Harmony
+	// Check HarmonyMode ?
+	if p.isHarmonyMode {
+		p.harmonyStack = append(p.harmonyStack, n)
+		return nil, nil
+	}
+
+	// Check HarmonyZero
 	if len(p.harmonyStack) > 0 {
-		if !isHarmony && len(p.harmonyStack) > 0 {
+		if !isHarmonyZero {
 			for _, h := range p.harmonyStack {
 				hEx := h.ExData.(*node.ExDataNoteOn)
 				hEx.Length = ex.Length
@@ -240,6 +250,8 @@ func (p *Parser) readNoteOn(t *token.Token) (*node.Node, error) {
 		}
 		return nil, nil
 	}
+
+	// Normal NoteOn
 	return n, nil
 }
 
@@ -255,6 +267,38 @@ func (p *Parser) readRest(t *token.Token) (*node.Node, error) {
 		ex.Length = nLen
 	}
 	return n, nil
+}
+
+func (p *Parser) raiseError(msg string) error {
+	t := p.desk.Peek()
+	if t == nil {
+		return fmt.Errorf(msg)
+	}
+	return fmt.Errorf("(%d) %s", t.Line, msg)
+}
+
+func (p *Parser) readHarmonyFlag() (*node.Node, error) {
+	// start harmony mode
+	if !p.isHarmonyMode {
+		p.isHarmonyMode = true
+		return nil, nil
+	}
+	// end harmony mode
+	nLen, err := p.readLength()
+	if err != nil {
+		return nil, err
+	}
+	if len(p.harmonyStack) == 0 {
+		return nil, nil
+	}
+	// Change note length
+	for _, h := range p.harmonyStack {
+		hEx := h.ExData.(*node.ExDataNoteOn)
+		hEx.Length = nLen
+	}
+	nh := node.NewHarmony(p.harmonyStack)
+	p.harmonyStack = []*node.Node{}
+	return nh, nil
 }
 
 func (p *Parser) readLoopBegin() (*node.Node, error) {
@@ -419,6 +463,9 @@ func (p *Parser) read1pCmd(t *token.Token, ntype node.NType) (*node.Node, error)
 	// process command
 	switch ntype {
 	case node.SetTrack:
+		if p.isHarmonyMode { // ハーモニーが閉じていない
+			return nil, fmt.Errorf("Harmony Not Closed : {'} required ")
+		}
 		return node.NewSetTrack(no, opt), nil
 	case node.SetOctave:
 		return node.NewSetOctave(no, opt), nil
