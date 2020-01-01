@@ -72,6 +72,8 @@ const (
 	PushStr = "PushStr"
 	// PushVariable const
 	PushVariable = "PushVariable"
+	// TimeSub const
+	TimeSub = "TimeSub"
 	// Print const
 	Print = "Print"
 )
@@ -925,5 +927,20 @@ func execHarmony(n *Node, s *song.Song) error {
 		s.CurTrack().Time = timePtr
 		no.Exec(no, s)
 	}
+	return nil
+}
+
+// NewTimeSub func
+func NewTimeSub(s string) *Node {
+	n := NewNode(TimeSub)
+	n.Exec = execTimeSub
+	n.SValue = s
+	return n
+}
+
+func execTimeSub(n *Node, s *song.Song) error {
+	timePtr := s.CurTrack().Time
+	s.Eval(s, n.SValue)
+	s.CurTrack().Time = timePtr
 	return nil
 }

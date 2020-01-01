@@ -91,6 +91,8 @@ func (p *Parser) readWord() (*node.Node, error) {
 		return p.readStr()
 	case "Print", "PRINT":
 		return p.readPrint()
+	case "Sub", "SUB":
+		return p.readSub()
 	default:
 		// Variable? eval
 		varName := t.Label
@@ -622,6 +624,18 @@ func (p *Parser) readStr() (*node.Node, error) {
 	}
 	p.Variable.SetSValue(name, "") // temporary set variable
 	return nodeStr, nil
+}
+
+func (p *Parser) readSub() (*node.Node, error) {
+	subValue, err := p.readValue()
+	if err != nil {
+		return nil, p.raiseError("Sub Command Error : Sub {...}")
+	}
+	if subValue.Type != node.PushStr {
+		return nil, p.raiseError("Sub Command Error : Sub {...}")
+	}
+	n := node.NewTimeSub(subValue.SValue)
+	return n, nil
 }
 
 func (p *Parser) readMacro() (*node.Node, error) {

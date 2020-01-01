@@ -3,9 +3,10 @@
 https://sakuramml.com/doc/faq/faq02.htm#1
 */
 
-q100 l1 'ceg' 'dfa' 'dgb' 'ceg'
+Sub { ceg } egb
 
 /*
+q100 l1 'ceg' 'dfa' 'dgb' 'ceg'
 l4 c0e0g d0f0a c0e0g
 
 // test
