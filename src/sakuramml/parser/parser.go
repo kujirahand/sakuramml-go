@@ -12,11 +12,11 @@ import (
 
 // Parser struct
 type Parser struct {
-	desk token.Desk
+	desk         token.Desk
 	harmonyStack []*node.Node
-	Top  *node.Node
-	Last *node.Node
-	Variable *variable.Variable // temporary variable def
+	Top          *node.Node
+	Last         *node.Node
+	Variable     *variable.Variable // temporary variable def
 }
 
 // NewParser func
@@ -31,55 +31,56 @@ func NewParser(tokens token.Tokens) *Parser {
 	return &p
 }
 
+// readWord func
 func (p *Parser) readWord() (*node.Node, error) {
+	// Get Word
 	t := p.desk.Next()
+	if len(t.Label) == 0 {
+		return node.NewNop(), nil
+	}
+	// 1ch Command? --- Lower Command and Flag
+	a := t.Label[0]
+	if 'a' <= a && a <= 'z' || 0x40 /*@*/ >= a {
+		switch a {
+		case 'c', 'd', 'e', 'f', 'g', 'a', 'b', 'n':
+			return p.readNoteOn(t)
+		case 'r':
+			return p.readRest(t)
+		case 'l':
+			return p.readSetLength()
+		case 'o':
+			return p.read1pCmd(t, node.SetOctave)
+		case 'q':
+			return p.read1pCmd(t, node.SetQgate)
+		case 'v':
+			return p.read1pCmd(t, node.SetVelocity)
+		case 'p':
+			return p.read1pCmd(t, node.SetPitchBend)
+		case '@':
+			return p.readVoice(t)
+		case '>':
+			return node.NewSetOctave(nil, "++"), nil
+		case '<':
+			return node.NewSetOctave(nil, "--"), nil
+		case '[':
+			return p.readLoopBegin()
+		case ']':
+			return p.readLoopEnd()
+		case ':':
+			return p.readLoopBreak()
+		case '|', ';':
+			return node.NewNop(), nil
+		}
+	}
+
+	// Other Reserved Words
 	switch t.Label {
-	case "c":
-		return p.readNoteOn(t)
-	case "d":
-		return p.readNoteOn(t)
-	case "e":
-		return p.readNoteOn(t)
-	case "f":
-		return p.readNoteOn(t)
-	case "g":
-		return p.readNoteOn(t)
-	case "a":
-		return p.readNoteOn(t)
-	case "b":
-		return p.readNoteOn(t)
-	case "n":
-		return p.readNoteOn(t)
-	case "r":
-		return p.readRest(t)
-	case "l":
-		return p.readSetLength()
-	case "o":
-		return p.read1pCmd(t, node.SetOctave)
-	case "q":
-		return p.read1pCmd(t, node.SetQgate)
-	case "v":
-		return p.read1pCmd(t, node.SetVelocity)
-	case "p":
-		return p.read1pCmd(t, node.SetPitchBend)
-	case "@", "Voice", "VOICE":
+	case "Voice", "VOICE":
 		return p.readVoice(t)
 	case "TR", "Track", "TRACK":
 		return p.read1pCmd(t, node.SetTrack)
 	case "Tempo", "TEMPO", "BPM":
 		return p.read1pCmd(t, node.SetTempo)
-	case ">", "↑":
-		return node.NewSetOctave(nil, "++"), nil
-	case "<", "↓":
-		return node.NewSetOctave(nil, "--"), nil
-	case "[":
-		return p.readLoopBegin()
-	case "]":
-		return p.readLoopEnd()
-	case ":":
-		return p.readLoopBreak()
-	case "|", ";":
-		return node.NewNop(), nil
 	case "Int", "INT":
 		return p.readInt()
 	case "Str", "STR":
@@ -87,14 +88,15 @@ func (p *Parser) readWord() (*node.Node, error) {
 	case "Print", "PRINT":
 		return p.readPrint()
 	default:
-		// eval
+		// Variable? eval
 		varName := t.Label
 		if p.Variable.Exists(varName) {
 			return node.NewStrEval(varName), nil
 		}
 	}
-	return nil, fmt.Errorf("[Error] (%d) Unknown Word : %s", t.Line + 1, t.Label)
+	return nil, fmt.Errorf("[Error] (%d) Unknown Word : %s", t.Line+1, t.Label)
 }
+
 func (p *Parser) readPrint() (*node.Node, error) {
 	pnode, err := p.readValue()
 	if err != nil {
@@ -182,7 +184,7 @@ func (p *Parser) readNoteOn(t *token.Token) (*node.Node, error) {
 		if p.desk.IsLabel("0") {
 			p.desk.Next() // skip "0"
 			p.harmonyStack = append(p.harmonyStack, n)
-			isHarmony =true
+			isHarmony = true
 		} else {
 			nLen, err := p.readLength()
 			if err != nil {
@@ -224,8 +226,19 @@ func (p *Parser) readNoteOn(t *token.Token) (*node.Node, error) {
 			}
 		}
 	}
-	if !isHarmony && len(p.harmonyStack) > 0{
-
+	// Check Harmony
+	if len(p.harmonyStack) > 0 {
+		if !isHarmony && len(p.harmonyStack) > 0 {
+			for _, h := range p.harmonyStack {
+				hEx := h.ExData.(*node.ExDataNoteOn)
+				hEx.Length = ex.Length
+			}
+			p.harmonyStack = append(p.harmonyStack, n)
+			hn := node.NewHarmony(p.harmonyStack)
+			p.harmonyStack = []*node.Node{}
+			return hn, nil
+		}
+		return nil, nil
 	}
 	return n, nil
 }

@@ -7,8 +7,8 @@ import (
 	"io"
 	"log"
 	"os"
-	"sakuramml/track"
 	"sakuramml/song"
+	"sakuramml/track"
 )
 
 // GetUint16 make 2 bytes BigEndian data
@@ -71,7 +71,7 @@ func SaveToFile(sng *song.Song, outfile string) {
 
 func getTrackData(track *track.Track) []byte {
 	buf := new(bytes.Buffer)
-	// track.SortEvent()
+	track.SortEvents()
 	events := track.Events
 	pTime := 0
 	for _, event := range events {
@@ -83,7 +83,7 @@ func getTrackData(track *track.Track) []byte {
 		buf.Write(event.GetDataBytes())
 		pTime = event.Time
 	}
-	// EOTのイベントを書く
+	// EOT(End Of Track)のイベントを書く
 	buf.Write([]byte{0, 0xFF, 0x2F, 00})
 	return buf.Bytes()
 }

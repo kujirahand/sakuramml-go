@@ -18,6 +18,8 @@ const (
 	Comment = "Comment"
 	// NoteOn const
 	NoteOn = "NoteOn"
+	// Harmony const
+	Harmony = "Harmony"
 	// SetTrack const
 	SetTrack = "SetTrack"
 	// SetTempo const
@@ -70,12 +72,12 @@ const (
 	PushStr = "PushStr"
 	// PushVariable const
 	PushVariable = "PushVariable"
-	// Print
+	// Print const
 	Print = "Print"
 )
 
-// ExecFunc
-type ExecFunc func (n *Node, s *song.Song) error
+// ExecFunc func
+type ExecFunc func(n *Node, s *song.Song) error
 
 // Node struct
 type Node struct {
@@ -335,7 +337,6 @@ func execPushVariable(n *Node, s *song.Song) error {
 	s.PushValue(value)
 	return nil
 }
-
 
 // NewSetTrack func
 func NewSetTrack(v *Node, opt string) *Node {
@@ -618,6 +619,7 @@ func NewCalcAdd(lnode, rnode *Node) *Node {
 	n.ExData = []*Node{lnode, rnode}
 	return n
 }
+
 // NewCalcSub func
 func NewCalcSub(lnode, rnode *Node) *Node {
 	n := NewNode(CalcSub)
@@ -626,6 +628,7 @@ func NewCalcSub(lnode, rnode *Node) *Node {
 	n.ExData = []*Node{lnode, rnode}
 	return n
 }
+
 // NewCalcMul func
 func NewCalcMul(lnode, rnode *Node) *Node {
 	n := NewNode(CalcMul)
@@ -634,6 +637,7 @@ func NewCalcMul(lnode, rnode *Node) *Node {
 	n.ExData = []*Node{lnode, rnode}
 	return n
 }
+
 // NewCalcDiv func
 func NewCalcDiv(lnode, rnode *Node) *Node {
 	n := NewNode(CalcDiv)
@@ -642,6 +646,7 @@ func NewCalcDiv(lnode, rnode *Node) *Node {
 	n.ExData = []*Node{lnode, rnode}
 	return n
 }
+
 // NewCalcMod func
 func NewCalcMod(lnode, rnode *Node) *Node {
 	n := NewNode(CalcMod)
@@ -818,6 +823,7 @@ func execLoopBreak(n *Node, s *song.Song) error {
 	return nil
 }
 
+// NewIntLet func
 func NewIntLet(name string, value *Node) *Node {
 	n := NewNode(IntLet)
 	n.SValue = name
@@ -833,6 +839,7 @@ func execIntLet(n *Node, s *song.Song) error {
 	return nil
 }
 
+// NewStrLet func
 func NewStrLet(name string, value *Node) *Node {
 	n := NewNode(StrLet)
 	n.SValue = name
@@ -849,6 +856,7 @@ func execStrLet(n *Node, s *song.Song) error {
 	return nil
 }
 
+// NewStrEval func
 func NewStrEval(name string) *Node {
 	n := NewNode(StrEval)
 	n.SValue = name
@@ -864,6 +872,7 @@ func execStrEval(n *Node, s *song.Song) error {
 	return err
 }
 
+// NewPushStr func
 func NewPushStr(v string) *Node {
 	n := NewNode(PushStr)
 	n.SValue = v
@@ -876,6 +885,7 @@ func execPushStr(n *Node, s *song.Song) error {
 	return nil
 }
 
+// NewPrint func
 func NewPrint(value *Node) *Node {
 	n := NewNode(Print)
 	n.NValue = value
@@ -897,5 +907,23 @@ func execPrint(n *Node, s *song.Song) error {
 	}
 	vlog := fmt.Sprintf("[PRINT](%d): %s", n.Line, log)
 	fmt.Println(vlog)
+	return nil
+}
+
+// NewHarmony func
+func NewHarmony(nodes []*Node) *Node {
+	n := NewNode(Harmony)
+	n.Exec = execHarmony
+	n.ExData = nodes
+	return n
+}
+
+func execHarmony(n *Node, s *song.Song) error {
+	nodes := n.ExData.([]*Node)
+	timePtr := s.CurTrack().Time
+	for _, no := range nodes {
+		s.CurTrack().Time = timePtr
+		no.Exec(no, s)
+	}
 	return nil
 }
