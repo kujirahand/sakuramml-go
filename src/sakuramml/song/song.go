@@ -15,8 +15,8 @@ type LoopItem struct {
 	EndNode   interface{} // Node
 }
 
-// EvalFunc type
-type EvalStrFunc func (song *Song, src string) error
+// EvalStrFunc type
+type EvalStrFunc func(song *Song, src string) error
 
 // Song is info of song, include tracks
 type Song struct {

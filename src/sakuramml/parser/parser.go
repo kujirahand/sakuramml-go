@@ -12,11 +12,12 @@ import (
 
 // Parser struct
 type Parser struct {
-	desk token.Desk
-	harmonyStack []*node.Node
-	Top  *node.Node
-	Last *node.Node
-	Variable *variable.Variable // temporary variable def
+	desk          token.Desk
+	harmonyStack  []*node.Node
+	isHarmonyMode bool
+	Top           *node.Node
+	Last          *node.Node
+	Variable      *variable.Variable // temporary variable def
 }
 
 // NewParser func
@@ -28,73 +29,80 @@ func NewParser(tokens token.Tokens) *Parser {
 	p.Top = nop
 	p.Last = p.Top
 	p.Variable = variable.NewVariable()
+	p.isHarmonyMode = false
 	return &p
 }
 
+// readWord func
 func (p *Parser) readWord() (*node.Node, error) {
+	// Get Word
 	t := p.desk.Next()
+	if len(t.Label) == 0 {
+		return node.NewNop(), nil
+	}
+	// 1ch Command? --- Lower Command and Flag
+	a := t.Label[0]
+	if 'a' <= a && a <= 'z' || 0x40 /*@*/ >= a {
+		switch a {
+		case 'c', 'd', 'e', 'f', 'g', 'a', 'b', 'n':
+			return p.readNoteOn(t)
+		case 'r':
+			return p.readRest(t)
+		case 'l':
+			return p.readSetLength()
+		case 'o':
+			return p.read1pCmd(t, node.SetOctave)
+		case 'q':
+			return p.read1pCmd(t, node.SetQgate)
+		case 'v':
+			return p.read1pCmd(t, node.SetVelocity)
+		case 'p':
+			return p.read1pCmd(t, node.SetPitchBend)
+		case '@':
+			return p.readVoice(t)
+		case '>':
+			return node.NewSetOctave(nil, "++"), nil
+		case '<':
+			return node.NewSetOctave(nil, "--"), nil
+		case '[':
+			return p.readLoopBegin()
+		case ']':
+			return p.readLoopEnd()
+		case ':':
+			return p.readLoopBreak()
+		case '|', ';':
+			return node.NewNop(), nil
+		case '\'':
+			return p.readHarmonyFlag()
+		}
+	}
+
+	// Other Reserved Words
 	switch t.Label {
-	case "c":
-		return p.readNoteOn(t)
-	case "d":
-		return p.readNoteOn(t)
-	case "e":
-		return p.readNoteOn(t)
-	case "f":
-		return p.readNoteOn(t)
-	case "g":
-		return p.readNoteOn(t)
-	case "a":
-		return p.readNoteOn(t)
-	case "b":
-		return p.readNoteOn(t)
-	case "n":
-		return p.readNoteOn(t)
-	case "r":
-		return p.readRest(t)
-	case "l":
-		return p.readSetLength()
-	case "o":
-		return p.read1pCmd(t, node.SetOctave)
-	case "q":
-		return p.read1pCmd(t, node.SetQgate)
-	case "v":
-		return p.read1pCmd(t, node.SetVelocity)
-	case "p":
-		return p.read1pCmd(t, node.SetPitchBend)
-	case "@", "Voice", "VOICE":
+	case "Voice", "VOICE":
 		return p.readVoice(t)
 	case "TR", "Track", "TRACK":
 		return p.read1pCmd(t, node.SetTrack)
 	case "Tempo", "TEMPO", "BPM":
 		return p.read1pCmd(t, node.SetTempo)
-	case ">", "↑":
-		return node.NewSetOctave(nil, "++"), nil
-	case "<", "↓":
-		return node.NewSetOctave(nil, "--"), nil
-	case "[":
-		return p.readLoopBegin()
-	case "]":
-		return p.readLoopEnd()
-	case ":":
-		return p.readLoopBreak()
-	case "|", ";":
-		return node.NewNop(), nil
 	case "Int", "INT":
 		return p.readInt()
 	case "Str", "STR":
 		return p.readStr()
 	case "Print", "PRINT":
 		return p.readPrint()
+	case "Sub", "SUB":
+		return p.readSub()
 	default:
-		// eval
+		// Variable? eval
 		varName := t.Label
 		if p.Variable.Exists(varName) {
 			return node.NewStrEval(varName), nil
 		}
 	}
-	return nil, fmt.Errorf("[Error] (%d) Unknown Word : %s", t.Line + 1, t.Label)
+	return nil, fmt.Errorf("[Error] (%d) Unknown Word : %s", t.Line+1, t.Label)
 }
+
 func (p *Parser) readPrint() (*node.Node, error) {
 	pnode, err := p.readValue()
 	if err != nil {
@@ -151,7 +159,7 @@ func (p *Parser) readNoteOn(t *token.Token) (*node.Node, error) {
 	var err error
 	ex := node.ExDataNoteOn{}
 	n := node.NewNoteOn(t.Label, &ex)
-	isHarmony := false
+	isHarmonyZero := false
 	// n command ?
 	if t.Label == "n" {
 		noteNoNode, err := p.readValue()
@@ -182,7 +190,7 @@ func (p *Parser) readNoteOn(t *token.Token) (*node.Node, error) {
 		if p.desk.IsLabel("0") {
 			p.desk.Next() // skip "0"
 			p.harmonyStack = append(p.harmonyStack, n)
-			isHarmony =true
+			isHarmonyZero = true
 		} else {
 			nLen, err := p.readLength()
 			if err != nil {
@@ -224,15 +232,28 @@ func (p *Parser) readNoteOn(t *token.Token) (*node.Node, error) {
 			}
 		}
 	}
-  // harmony?
-  if isHarmony {
-    p.harmonyStack = append(p.harmonyStack,  n)
-    return node.NewNop(), nil
-  }
-  // has harmony
-	if len(p.harmonyStack) > 0 {
-    // 
+	// Check HarmonyMode ?
+	if p.isHarmonyMode {
+		p.harmonyStack = append(p.harmonyStack, n)
+		return nil, nil
 	}
+
+	// Check HarmonyZero
+	if len(p.harmonyStack) > 0 {
+		if !isHarmonyZero {
+			for _, h := range p.harmonyStack {
+				hEx := h.ExData.(*node.ExDataNoteOn)
+				hEx.Length = ex.Length
+			}
+			p.harmonyStack = append(p.harmonyStack, n)
+			hn := node.NewHarmony(p.harmonyStack)
+			p.harmonyStack = []*node.Node{}
+			return hn, nil
+		}
+		return nil, nil
+	}
+
+	// Normal NoteOn
 	return n, nil
 }
 
@@ -248,6 +269,38 @@ func (p *Parser) readRest(t *token.Token) (*node.Node, error) {
 		ex.Length = nLen
 	}
 	return n, nil
+}
+
+func (p *Parser) raiseError(msg string) error {
+	t := p.desk.Peek()
+	if t == nil {
+		return fmt.Errorf(msg)
+	}
+	return fmt.Errorf("(%d) %s", t.Line, msg)
+}
+
+func (p *Parser) readHarmonyFlag() (*node.Node, error) {
+	// start harmony mode
+	if !p.isHarmonyMode {
+		p.isHarmonyMode = true
+		return nil, nil
+	}
+	// end harmony mode
+	nLen, err := p.readLength()
+	if err != nil {
+		return nil, err
+	}
+	if len(p.harmonyStack) == 0 {
+		return nil, nil
+	}
+	// Change note length
+	for _, h := range p.harmonyStack {
+		hEx := h.ExData.(*node.ExDataNoteOn)
+		hEx.Length = nLen
+	}
+	nh := node.NewHarmony(p.harmonyStack)
+	p.harmonyStack = []*node.Node{}
+	return nh, nil
 }
 
 func (p *Parser) readLoopBegin() (*node.Node, error) {
@@ -412,6 +465,9 @@ func (p *Parser) read1pCmd(t *token.Token, ntype node.NType) (*node.Node, error)
 	// process command
 	switch ntype {
 	case node.SetTrack:
+		if p.isHarmonyMode { // ハーモニーが閉じていない
+			return nil, fmt.Errorf("Harmony Not Closed : {'} required ")
+		}
 		return node.NewSetTrack(no, opt), nil
 	case node.SetOctave:
 		return node.NewSetOctave(no, opt), nil
@@ -568,6 +624,18 @@ func (p *Parser) readStr() (*node.Node, error) {
 	}
 	p.Variable.SetSValue(name, "") // temporary set variable
 	return nodeStr, nil
+}
+
+func (p *Parser) readSub() (*node.Node, error) {
+	subValue, err := p.readValue()
+	if err != nil {
+		return nil, p.raiseError("Sub Command Error : Sub {...}")
+	}
+	if subValue.Type != node.PushStr {
+		return nil, p.raiseError("Sub Command Error : Sub {...}")
+	}
+	n := node.NewTimeSub(subValue.SValue)
+	return n, nil
 }
 
 func (p *Parser) readMacro() (*node.Node, error) {
