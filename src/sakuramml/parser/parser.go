@@ -224,8 +224,14 @@ func (p *Parser) readNoteOn(t *token.Token) (*node.Node, error) {
 			}
 		}
 	}
-	if !isHarmony && len(p.harmonyStack) > 0{
-
+  // harmony?
+  if isHarmony {
+    p.harmonyStack = append(p.harmonyStack,  n)
+    return node.NewNop(), nil
+  }
+  // has harmony
+	if len(p.harmonyStack) > 0 {
+    // 
 	}
 	return n, nil
 }
