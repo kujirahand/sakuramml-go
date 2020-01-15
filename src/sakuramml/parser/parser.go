@@ -58,6 +58,8 @@ func (p *Parser) readWord() (*node.Node, error) {
 			return p.read1pCmd(t, node.SetVelocity)
 		case 'p':
 			return p.read1pCmd(t, node.SetPitchBend)
+		case 'y':
+			return p.readCCCmd(t)
 		case '@':
 			return p.readVoice(t)
 		case '>':
@@ -444,6 +446,26 @@ func (p *Parser) readValue1() (*node.Node, error) {
 		return sn, nil
 	}
 	return nil, fmt.Errorf("not implement : %s", ct.Label)
+}
+
+func (p *Parser) readCCCmd(t *token.Token) (*node.Node, error) {
+	// Control Change No
+	noNode, err := p.readValue1()
+	if err != nil {
+		return nil, err
+	}
+	if !p.desk.IsLabel(",") {
+		return nil, p.raiseError("Parameter not enough : y(no),(value)")
+	}
+	p.desk.Next()
+	// Control Change value
+	vNode, err := p.readValue1()
+	if err != nil {
+		return nil, err
+	}
+
+	ccNode := node.NewCtrlChange(noNode, vNode)
+	return ccNode, nil
 }
 
 func (p *Parser) read1pCmd(t *token.Token, ntype node.NType) (*node.Node, error) {

@@ -3,6 +3,7 @@ package song
 import (
 	"fmt"
 	"sakuramml/track"
+	"sakuramml/utils"
 	"sakuramml/variable"
 	"strconv"
 )
@@ -70,11 +71,7 @@ func (song *Song) PushIValue(v int) {
 // PopIValue func
 func (song *Song) PopIValue() int {
 	v := song.PopStack()
-	switch v.(type) {
-	case int:
-		return v.(int)
-	}
-	return 0
+	return utils.ToInt(v)
 }
 
 // PushValue func
@@ -96,11 +93,7 @@ func (song *Song) PushSValue(v string) {
 // PopSValue func
 func (song *Song) PopSValue() string {
 	v := song.PopStack()
-	switch v.(type) {
-	case string:
-		return v.(string)
-	}
-	return ""
+	return utils.ToStr(v)
 }
 
 // PushLoop func

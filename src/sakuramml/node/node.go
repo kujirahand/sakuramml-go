@@ -32,6 +32,8 @@ const (
 	SetVelocity = "SetVelocity"
 	// SetPC const
 	SetPC = "@"
+	// CtrlChange const / Write Control Change
+	CtrlChange = "CtrlChange"
 	// SetPitchBend const
 	SetPitchBend = "SetPitchBend"
 	// Number const
@@ -658,7 +660,8 @@ func NewCalcMod(lnode, rnode *Node) *Node {
 	return n
 }
 
-func toInt(v interface{}) int {
+// ToInt Function
+func ToInt(v interface{}) int {
 	switch v.(type) {
 	case int:
 		return v.(int)
@@ -673,7 +676,8 @@ func toInt(v interface{}) int {
 	}
 }
 
-func toStr(v interface{}) string {
+// ToStr Function
+func ToStr(v interface{}) string {
 	switch v.(type) {
 	case int:
 		return strconv.Itoa(v.(int))
@@ -695,16 +699,16 @@ func execCalc(n *Node, s *song.Song) error {
 	case "+":
 		switch rvalue.(type) {
 		case int:
-			iv := toInt(lvalue) + toInt(rvalue)
+			iv := ToInt(lvalue) + ToInt(rvalue)
 			s.PushIValue(iv)
 		case string:
-			sv := toStr(lvalue) + toStr(rvalue)
+			sv := ToStr(lvalue) + ToStr(rvalue)
 			s.PushSValue(sv)
 		}
 	case "-":
 		switch rvalue.(type) {
 		case int:
-			iv := toInt(lvalue) - toInt(rvalue)
+			iv := ToInt(lvalue) - ToInt(rvalue)
 			s.PushIValue(iv)
 		case string:
 			s.PushSValue("")
@@ -712,7 +716,7 @@ func execCalc(n *Node, s *song.Song) error {
 	case "*":
 		switch rvalue.(type) {
 		case int:
-			iv := toInt(lvalue) * toInt(rvalue)
+			iv := ToInt(lvalue) * ToInt(rvalue)
 			s.PushIValue(iv)
 		case string:
 			s.PushSValue("")
@@ -720,7 +724,7 @@ func execCalc(n *Node, s *song.Song) error {
 	case "/":
 		switch rvalue.(type) {
 		case int:
-			iv := toInt(lvalue) / toInt(rvalue)
+			iv := ToInt(lvalue) / ToInt(rvalue)
 			s.PushIValue(iv)
 		case string:
 			s.PushSValue("")
@@ -728,7 +732,7 @@ func execCalc(n *Node, s *song.Song) error {
 	case "%":
 		switch rvalue.(type) {
 		case int:
-			iv := toInt(lvalue) % toInt(rvalue)
+			iv := ToInt(lvalue) % ToInt(rvalue)
 			s.PushIValue(iv)
 		case string:
 			s.PushSValue("")
@@ -942,5 +946,28 @@ func execTimeSub(n *Node, s *song.Song) error {
 	timePtr := s.CurTrack().Time
 	s.Eval(s, n.SValue)
 	s.CurTrack().Time = timePtr
+	return nil
+}
+
+// NewCtrlChange func
+func NewCtrlChange(no *Node, value *Node) *Node {
+	n := NewNode(CtrlChange)
+	n.Exec = execCtrlChange
+	n.NValue = no
+	n.ExData = value
+	return n
+}
+
+func execCtrlChange(n *Node, s *song.Song) error {
+	// get no
+	n.NValue.Exec(n.NValue, s)
+	no := s.PopIValue()
+	// get value
+	vNode := n.ExData.(*Node)
+	vNode.Exec(vNode, s)
+	v := s.PopIValue()
+	// append CC
+	cur := s.CurTrack()
+	cur.AddCC(cur.Time, no, v)
 	return nil
 }
