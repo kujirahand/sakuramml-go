@@ -8,6 +8,7 @@ import (
 	"sakuramml/utils"
 	"sakuramml/variable"
 	"strconv"
+	"strings"
 )
 
 // Parser struct
@@ -102,7 +103,7 @@ func (p *Parser) readWord() (*node.Node, error) {
 			return node.NewStrEval(varName), nil
 		}
 	}
-	return nil, fmt.Errorf("[Error] (%d) Unknown Word : %s", t.Line+1, t.Label)
+	return nil, p.raiseError(fmt.Sprintf("Unknown Word : [%s]", t.Label))
 }
 
 func (p *Parser) readPrint() (*node.Node, error) {
@@ -278,7 +279,18 @@ func (p *Parser) raiseError(msg string) error {
 	if t == nil {
 		return fmt.Errorf(msg)
 	}
-	return fmt.Errorf("(%d) %s", t.Line, msg)
+	// show near code
+	near := ""
+	for i := 0; i < 5; i++ {
+		idx := -5 + i
+		b := p.desk.PeekN(idx)
+		if b != nil {
+			near += b.Label + " "
+		}
+	}
+	near = strings.Trim(near, " ")
+	// return error
+	return fmt.Errorf("(%d) %s {..%s}", t.Line, msg, near)
 }
 
 func (p *Parser) readHarmonyFlag() (*node.Node, error) {
@@ -445,12 +457,12 @@ func (p *Parser) readValue1() (*node.Node, error) {
 		p.desk.Next()
 		return sn, nil
 	}
-	return nil, fmt.Errorf("not implement : %s", ct.Label)
+	return nil, p.raiseError(fmt.Sprintf("not implement : %s", ct.Label))
 }
 
 func (p *Parser) readCCCmd(t *token.Token) (*node.Node, error) {
 	// Control Change No
-	noNode, err := p.readValue1()
+	noNode, err := p.readValue()
 	if err != nil {
 		return nil, err
 	}
@@ -459,7 +471,7 @@ func (p *Parser) readCCCmd(t *token.Token) (*node.Node, error) {
 	}
 	p.desk.Next()
 	// Control Change value
-	vNode, err := p.readValue1()
+	vNode, err := p.readValue()
 	if err != nil {
 		return nil, err
 	}

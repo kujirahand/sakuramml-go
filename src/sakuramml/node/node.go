@@ -969,5 +969,12 @@ func execCtrlChange(n *Node, s *song.Song) error {
 	// append CC
 	cur := s.CurTrack()
 	cur.AddCC(cur.Time, no, v)
+	// Debug
+	if s.Debug {
+		tr := s.CurTrack()
+		fmt.Printf(
+			"- Time(%s) TR=%-2d y%d,%d\n",
+			s.TimePtrToStr(tr.Time), s.TrackNo, no, v)
+	}
 	return nil
 }

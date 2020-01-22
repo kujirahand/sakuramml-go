@@ -71,6 +71,19 @@ func (desk *Desk) Peek() *Token {
 	return nil
 }
 
+// PeekN func
+func (desk *Desk) PeekN(n int) *Token {
+	idx := n + desk.index
+	// range check
+	if idx < 0 {
+		return nil
+	}
+	if idx >= desk.Length() {
+		return nil
+	}
+	return &desk.tokens[idx]
+}
+
 // Next func
 func (desk *Desk) Next() *Token {
 	if desk.HasNext() {
