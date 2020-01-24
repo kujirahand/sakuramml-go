@@ -9,76 +9,102 @@ import (
 )
 
 // NType type
-type NType string
+type NType int
 
 const (
 	// Nop const
-	Nop NType = "Nop"
+	Nop NType = iota
 	// Comment const
-	Comment = "Comment"
+	Comment
 	// NoteOn const
-	NoteOn = "NoteOn"
+	NoteOn
 	// Harmony const
-	Harmony = "Harmony"
+	Harmony
 	// SetTrack const
-	SetTrack = "SetTrack"
+	SetTrack
 	// SetTempo const
-	SetTempo = "SetTempo"
+	SetTempo
 	// SetOctave const
-	SetOctave = "SetOctave"
+	SetOctave
 	// SetQgate const
-	SetQgate = "SetQgate"
+	SetQgate
 	// SetVelocity const
-	SetVelocity = "SetVelocity"
+	SetVelocity
 	// SetPC const
-	SetPC = "@"
+	SetPC
 	// CtrlChange const / Write Control Change
-	CtrlChange = "CtrlChange"
+	CtrlChange
 	// SetPitchBend const
-	SetPitchBend = "SetPitchBend"
+	SetPitchBend
 	// Number const
-	Number = "Number"
+	Number
 	// Length const
-	Length = "Length"
+	Length
 	// LengthDot const
-	LengthDot = "Dot"
+	LengthDot
 	// SetLength const
-	SetLength = "SetLength"
+	SetLength
 	// GetTrackLength const
-	GetTrackLength = "GetTrackLength"
+	GetTrackLength
 	// CalcAdd const
-	CalcAdd = "CalcAdd"
+	CalcAdd
 	// CalcSub const
-	CalcSub = "CalcSub"
+	CalcSub
 	// CalcMul const
-	CalcMul = "CalcMul"
+	CalcMul
 	// CalcDiv const
-	CalcDiv = "CalcDiv"
+	CalcDiv
 	// CalcMod const
-	CalcMod = "CalcMod"
+	CalcMod
 	// NLenToStep const
-	NLenToStep = "NLenToStep"
+	NLenToStep
 	// LoopBegin const
-	LoopBegin = "LoopBegin"
+	LoopBegin
 	// LoopEnd const
-	LoopEnd = "LoopEnd"
+	LoopEnd
 	// LoopBreak const
-	LoopBreak = "LoopBreak"
+	LoopBreak
 	// IntLet const
-	IntLet = "IntLet"
+	IntLet
 	// StrLet const
-	StrLet = "StrLet"
+	StrLet
 	// StrEval const
-	StrEval = "StrEval"
+	StrEval
 	// PushStr const
-	PushStr = "PushStr"
+	PushStr
 	// PushVariable const
-	PushVariable = "PushVariable"
+	PushVariable
 	// TimeSub const
-	TimeSub = "TimeSub"
+	TimeSub
+	// Play const
+	Play
 	// Print const
-	Print = "Print"
+	Print
 )
+
+// NodeNameMap defined Node type name
+var NodeNameMap = map[NType]string{
+	Nop:          "Nop",
+	Comment:      "Comment",
+	Print:        "Print",
+	NoteOn:       "NoteOn",
+	StrLet:       "StrLet",
+	TimeSub:      "TimeSub",
+	IntLet:       "IntLet",
+	LoopBegin:    "LoopBegin",
+	LoopEnd:      "LoopEnd",
+	LoopBreak:    "LoopEnd",
+	Number:       "Number",
+	PushStr:      "PushStr",
+	Play:         "Play",
+	SetTrack:     "SetTrack",
+	StrEval:      "StrEval",
+	CtrlChange:   "CtrlChange",
+	SetPC:        "SetPC",
+	SetOctave:    "SetOctave",
+	SetVelocity:  "SetVelocity",
+	PushVariable: "PushVariable",
+}
 
 // ExecFunc func
 type ExecFunc func(n *Node, s *song.Song) error
@@ -118,7 +144,12 @@ func nodeToStringN(n *Node, level int) string {
 		case PushStr:
 			params = fmt.Sprintf("%s", i.SValue)
 		}
-		s += tab + string(i.Type) + " " + params + "\n"
+		// Get Node Name
+		nodeName := "__" + strconv.Itoa(int(i.Type))
+		if s, ok := NodeNameMap[i.Type]; ok {
+			nodeName = s
+		}
+		s += tab + nodeName + " " + params + "\n"
 		if i.NValue != nil {
 			s += nodeToStringN(i.NValue, level+1)
 		}
@@ -182,7 +213,6 @@ func NewNode(nodeType NType) *Node {
 func execNone(n *Node, s *song.Song) error {
 	err := fmt.Errorf("ExecFunc failed, not implemented : %v", *n)
 	panic(err) // FOR SYSTEM
-	return err
 }
 
 // NewNop func

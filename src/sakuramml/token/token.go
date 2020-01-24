@@ -1,21 +1,21 @@
 package token
 
 // TType type
-type TType string
+type TType int
 
 const (
 	// Comment token
-	Comment TType = "comment"
+	Comment TType = iota
 	// Word token
-	Word = "word"
+	Word
 	// Macro token
-	Macro = "Macro"
+	Macro
 	// Number token
-	Number = "number"
+	Number
 	// Flag token
-	Flag = "flag"
+	Flag
 	// String token
-	String = "string"
+	String
 )
 
 // Token struct

@@ -96,6 +96,8 @@ func (p *Parser) readWord() (*node.Node, error) {
 		return p.readPrint()
 	case "Sub", "SUB":
 		return p.readSub()
+	case "Play", "PLAY":
+		return p.readPlay()
 	default:
 		// Variable? eval
 		varName := t.Label
@@ -670,6 +672,10 @@ func (p *Parser) readSub() (*node.Node, error) {
 	}
 	n := node.NewTimeSub(subValue.SValue)
 	return n, nil
+}
+
+func (p *Parser) readPlay() (*node.Node, error) {
+	return nil, p.raiseError("Not supported")
 }
 
 func (p *Parser) readMacro() (*node.Node, error) {
