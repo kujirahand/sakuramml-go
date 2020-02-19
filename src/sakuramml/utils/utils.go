@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"strconv"
 )
 
 // BytesToHex func
@@ -46,7 +47,7 @@ func StrCompareRuneKey(src []rune, index int, keyRune []rune) bool {
 		if i >= maxLen {
 			return false
 		}
-		if keyRune[i] != src[index + i] {
+		if keyRune[i] != src[index+i] {
 			return false
 		}
 	}
@@ -125,6 +126,7 @@ func StrGetRangeComment(src []rune, index *int) string {
 	return res
 }
 
+// CountKey function
 func CountKey(source, key string) int {
 	count := 0
 	src := []rune(source)
@@ -142,3 +144,30 @@ func CountKey(source, key string) int {
 	return count
 }
 
+// ToInt Function
+func ToInt(v interface{}) int {
+	switch v.(type) {
+	case int:
+		return v.(int)
+	case string:
+		iv, err := strconv.Atoi(v.(string))
+		if err != nil {
+			return 0
+		}
+		return iv
+	default:
+		return 0
+	}
+}
+
+// ToStr Function
+func ToStr(v interface{}) string {
+	switch v.(type) {
+	case int:
+		return strconv.Itoa(v.(int))
+	case string:
+		return v.(string)
+	default:
+		return ""
+	}
+}

@@ -1,21 +1,21 @@
 package token
 
 // TType type
-type TType string
+type TType int
 
 const (
 	// Comment token
-	Comment TType = "comment"
+	Comment TType = iota
 	// Word token
-	Word = "word"
+	Word
 	// Macro token
-	Macro = "Macro"
+	Macro
 	// Number token
-	Number = "number"
+	Number
 	// Flag token
-	Flag = "flag"
+	Flag
 	// String token
-	String = "string"
+	String
 )
 
 // Token struct
@@ -69,6 +69,19 @@ func (desk *Desk) Peek() *Token {
 		return &desk.tokens[desk.index]
 	}
 	return nil
+}
+
+// PeekN func
+func (desk *Desk) PeekN(n int) *Token {
+	idx := n + desk.index
+	// range check
+	if idx < 0 {
+		return nil
+	}
+	if idx >= desk.Length() {
+		return nil
+	}
+	return &desk.tokens[idx]
 }
 
 // Next func

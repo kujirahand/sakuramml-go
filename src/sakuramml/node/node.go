@@ -9,74 +9,102 @@ import (
 )
 
 // NType type
-type NType string
+type NType int
 
 const (
 	// Nop const
-	Nop NType = "Nop"
+	Nop NType = iota
 	// Comment const
-	Comment = "Comment"
+	Comment
 	// NoteOn const
-	NoteOn = "NoteOn"
+	NoteOn
 	// Harmony const
-	Harmony = "Harmony"
+	Harmony
 	// SetTrack const
-	SetTrack = "SetTrack"
+	SetTrack
 	// SetTempo const
-	SetTempo = "SetTempo"
+	SetTempo
 	// SetOctave const
-	SetOctave = "SetOctave"
+	SetOctave
 	// SetQgate const
-	SetQgate = "SetQgate"
+	SetQgate
 	// SetVelocity const
-	SetVelocity = "SetVelocity"
+	SetVelocity
 	// SetPC const
-	SetPC = "@"
+	SetPC
+	// CtrlChange const / Write Control Change
+	CtrlChange
 	// SetPitchBend const
-	SetPitchBend = "SetPitchBend"
+	SetPitchBend
 	// Number const
-	Number = "Number"
+	Number
 	// Length const
-	Length = "Length"
+	Length
 	// LengthDot const
-	LengthDot = "Dot"
+	LengthDot
 	// SetLength const
-	SetLength = "SetLength"
+	SetLength
 	// GetTrackLength const
-	GetTrackLength = "GetTrackLength"
+	GetTrackLength
 	// CalcAdd const
-	CalcAdd = "CalcAdd"
+	CalcAdd
 	// CalcSub const
-	CalcSub = "CalcSub"
+	CalcSub
 	// CalcMul const
-	CalcMul = "CalcMul"
+	CalcMul
 	// CalcDiv const
-	CalcDiv = "CalcDiv"
+	CalcDiv
 	// CalcMod const
-	CalcMod = "CalcMod"
+	CalcMod
 	// NLenToStep const
-	NLenToStep = "NLenToStep"
+	NLenToStep
 	// LoopBegin const
-	LoopBegin = "LoopBegin"
+	LoopBegin
 	// LoopEnd const
-	LoopEnd = "LoopEnd"
+	LoopEnd
 	// LoopBreak const
-	LoopBreak = "LoopBreak"
+	LoopBreak
 	// IntLet const
-	IntLet = "IntLet"
+	IntLet
 	// StrLet const
-	StrLet = "StrLet"
+	StrLet
 	// StrEval const
-	StrEval = "StrEval"
+	StrEval
 	// PushStr const
-	PushStr = "PushStr"
+	PushStr
 	// PushVariable const
-	PushVariable = "PushVariable"
+	PushVariable
 	// TimeSub const
-	TimeSub = "TimeSub"
+	TimeSub
+	// Play const
+	Play
 	// Print const
-	Print = "Print"
+	Print
 )
+
+// NodeNameMap defined Node type name
+var NodeNameMap = map[NType]string{
+	Nop:          "Nop",
+	Comment:      "Comment",
+	Print:        "Print",
+	NoteOn:       "NoteOn",
+	StrLet:       "StrLet",
+	TimeSub:      "TimeSub",
+	IntLet:       "IntLet",
+	LoopBegin:    "LoopBegin",
+	LoopEnd:      "LoopEnd",
+	LoopBreak:    "LoopEnd",
+	Number:       "Number",
+	PushStr:      "PushStr",
+	Play:         "Play",
+	SetTrack:     "SetTrack",
+	StrEval:      "StrEval",
+	CtrlChange:   "CtrlChange",
+	SetPC:        "SetPC",
+	SetOctave:    "SetOctave",
+	SetVelocity:  "SetVelocity",
+	PushVariable: "PushVariable",
+}
 
 // ExecFunc func
 type ExecFunc func(n *Node, s *song.Song) error
@@ -116,7 +144,12 @@ func nodeToStringN(n *Node, level int) string {
 		case PushStr:
 			params = fmt.Sprintf("%s", i.SValue)
 		}
-		s += tab + string(i.Type) + " " + params + "\n"
+		// Get Node Name
+		nodeName := "__" + strconv.Itoa(int(i.Type))
+		if s, ok := NodeNameMap[i.Type]; ok {
+			nodeName = s
+		}
+		s += tab + nodeName + " " + params + "\n"
 		if i.NValue != nil {
 			s += nodeToStringN(i.NValue, level+1)
 		}
@@ -180,7 +213,6 @@ func NewNode(nodeType NType) *Node {
 func execNone(n *Node, s *song.Song) error {
 	err := fmt.Errorf("ExecFunc failed, not implemented : %v", *n)
 	panic(err) // FOR SYSTEM
-	return err
 }
 
 // NewNop func
@@ -658,7 +690,8 @@ func NewCalcMod(lnode, rnode *Node) *Node {
 	return n
 }
 
-func toInt(v interface{}) int {
+// ToInt Function
+func ToInt(v interface{}) int {
 	switch v.(type) {
 	case int:
 		return v.(int)
@@ -673,7 +706,8 @@ func toInt(v interface{}) int {
 	}
 }
 
-func toStr(v interface{}) string {
+// ToStr Function
+func ToStr(v interface{}) string {
 	switch v.(type) {
 	case int:
 		return strconv.Itoa(v.(int))
@@ -695,16 +729,16 @@ func execCalc(n *Node, s *song.Song) error {
 	case "+":
 		switch rvalue.(type) {
 		case int:
-			iv := toInt(lvalue) + toInt(rvalue)
+			iv := ToInt(lvalue) + ToInt(rvalue)
 			s.PushIValue(iv)
 		case string:
-			sv := toStr(lvalue) + toStr(rvalue)
+			sv := ToStr(lvalue) + ToStr(rvalue)
 			s.PushSValue(sv)
 		}
 	case "-":
 		switch rvalue.(type) {
 		case int:
-			iv := toInt(lvalue) - toInt(rvalue)
+			iv := ToInt(lvalue) - ToInt(rvalue)
 			s.PushIValue(iv)
 		case string:
 			s.PushSValue("")
@@ -712,7 +746,7 @@ func execCalc(n *Node, s *song.Song) error {
 	case "*":
 		switch rvalue.(type) {
 		case int:
-			iv := toInt(lvalue) * toInt(rvalue)
+			iv := ToInt(lvalue) * ToInt(rvalue)
 			s.PushIValue(iv)
 		case string:
 			s.PushSValue("")
@@ -720,7 +754,7 @@ func execCalc(n *Node, s *song.Song) error {
 	case "/":
 		switch rvalue.(type) {
 		case int:
-			iv := toInt(lvalue) / toInt(rvalue)
+			iv := ToInt(lvalue) / ToInt(rvalue)
 			s.PushIValue(iv)
 		case string:
 			s.PushSValue("")
@@ -728,7 +762,7 @@ func execCalc(n *Node, s *song.Song) error {
 	case "%":
 		switch rvalue.(type) {
 		case int:
-			iv := toInt(lvalue) % toInt(rvalue)
+			iv := ToInt(lvalue) % ToInt(rvalue)
 			s.PushIValue(iv)
 		case string:
 			s.PushSValue("")
@@ -942,5 +976,35 @@ func execTimeSub(n *Node, s *song.Song) error {
 	timePtr := s.CurTrack().Time
 	s.Eval(s, n.SValue)
 	s.CurTrack().Time = timePtr
+	return nil
+}
+
+// NewCtrlChange func
+func NewCtrlChange(no *Node, value *Node) *Node {
+	n := NewNode(CtrlChange)
+	n.Exec = execCtrlChange
+	n.NValue = no
+	n.ExData = value
+	return n
+}
+
+func execCtrlChange(n *Node, s *song.Song) error {
+	// get no
+	n.NValue.Exec(n.NValue, s)
+	no := s.PopIValue()
+	// get value
+	vNode := n.ExData.(*Node)
+	vNode.Exec(vNode, s)
+	v := s.PopIValue()
+	// append CC
+	cur := s.CurTrack()
+	cur.AddCC(cur.Time, no, v)
+	// Debug
+	if s.Debug {
+		tr := s.CurTrack()
+		fmt.Printf(
+			"- Time(%s) TR=%-2d y%d,%d\n",
+			s.TimePtrToStr(tr.Time), s.TrackNo, no, v)
+	}
 	return nil
 }

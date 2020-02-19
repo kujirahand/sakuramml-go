@@ -3,9 +3,16 @@
 https://sakuramml.com/doc/faq/faq02.htm#1
 */
 
-Sub { ceg } egb
+INT N1=30
+INT N2=120
+INT PAN=10
+yPAN,N1 cdef 
+yPAN,N2 gfed
 
 /*
+y10,0 cdef y10,127 cdef
+Sub { ceg } egb
+
 q100 l1 'ceg' 'dfa' 'dgb' 'ceg'
 l4 c0e0g d0f0a c0e0g
 
