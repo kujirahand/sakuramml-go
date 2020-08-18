@@ -1,8 +1,9 @@
 package midi
 
 import (
-	"sakuramml/utils"
 	"testing"
+
+	"github.com/kujirahand/sakuramml-go/utils"
 )
 
 func TestGetDeltaTimeBytes(t *testing.T) {

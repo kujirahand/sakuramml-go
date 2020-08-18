@@ -1,9 +1,10 @@
 package song
 
 import (
-	"sakuramml/track"
-	"sakuramml/utils"
 	"testing"
+
+	"github.com/kujirahand/sakuramml-go/track"
+	"github.com/kujirahand/sakuramml-go/utils"
 )
 
 func TestTrackSortEvents(t *testing.T) {

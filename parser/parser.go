@@ -2,13 +2,14 @@ package parser
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/kujirahand/sakuramml-go/node"
 	"github.com/kujirahand/sakuramml-go/token"
 	"github.com/kujirahand/sakuramml-go/track"
 	"github.com/kujirahand/sakuramml-go/utils"
 	"github.com/kujirahand/sakuramml-go/variable"
-	"strconv"
-	"strings"
 )
 
 // Parser struct
@@ -493,7 +494,7 @@ func (p *Parser) read1pCmd(t *token.Token, ntype node.NType) (*node.Node, error)
 	}
 	no, err := p.readValue()
 	if err != nil {
-		return nil, fmt.Errorf("%s : %s value invalid", t.Label, ntype)
+		return nil, fmt.Errorf("%s : %s value invalid", t.Label, node.NodeNameMap[ntype])
 	}
 	if p.desk.IsLabel(")") { // skip ParenR
 		p.desk.Next()
@@ -516,7 +517,7 @@ func (p *Parser) read1pCmd(t *token.Token, ntype node.NType) (*node.Node, error)
 	case node.SetPitchBend:
 		return node.NewSetPitchBend(no, opt), nil
 	default:
-		return nil, fmt.Errorf("System Error : No command : %s", ntype)
+		return nil, fmt.Errorf("System Error : No command : %d", ntype)
 	}
 }
 
@@ -695,11 +696,10 @@ func (p *Parser) readMacro() (*node.Node, error) {
 		}
 		nodeStr := node.NewStrLet(macroName.Label, nodeValue)
 		return nodeStr, nil
-	} else {
-		// Call macro
-		callNode := node.NewStrEval(macroName.Label)
-		return callNode, nil
 	}
+	// Call macro
+	callNode := node.NewStrEval(macroName.Label)
+	return callNode, nil
 }
 
 // Parse convert to AST

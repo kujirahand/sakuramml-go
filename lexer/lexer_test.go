@@ -1,8 +1,9 @@
 package lexer
 
 import (
-	"sakuramml/token"
 	"testing"
+
+	"github.com/kujirahand/sakuramml-go/token"
 )
 
 func lexExec(t *testing.T, code, expected string) {

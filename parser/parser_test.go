@@ -1,8 +1,9 @@
 package parser
 
 import (
-	"sakuramml/lexer"
 	"testing"
+
+	"github.com/kujirahand/sakuramml-go/lexer"
 )
 
 func TestReadNoteOn(t *testing.T) {
