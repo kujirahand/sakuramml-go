@@ -11,15 +11,8 @@ mml compiler (text music) sakura by golang
 
 ## Setup
 
-環境変数を手軽に書き換えるdirenvを利用しています。
-macOSなら``brew install direnv``でインストールしておいてください。
-
 ```
-direnv allow
+$ go get github.com/kujirahand/sakuramml-go
+$ go install github.com/kujirahand/sakuramml-go
 ```
 
-## Compile
-
-```
-go build src/csakura.go
-```
