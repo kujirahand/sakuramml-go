@@ -1,0 +1,36 @@
+/*
+当面の目標 - チュートリアルのコードを動くようにする
+https://sakuramml.com/doc/faq/faq02.htm#1
+*/
+
+INT N1=30
+INT N2=120
+INT PAN=10
+yPAN,N1 cdef 
+yPAN,N2 gfed
+
+/*
+y10,0 cdef y10,127 cdef
+Sub { ceg } egb
+
+q100 l1 'ceg' 'dfa' 'dgb' 'ceg'
+l4 c0e0g d0f0a c0e0g
+
+// test
+Int V=(1+2*3)*10
+PRINT(V)
+Str AA = {cdeg}
+
+PRINT(AA)
+AA;
+
+TR(1) l4 cdef | gfed | c^^^
+v50q100
+c4,-%10,+50
+*/
+/*
+p%0 [4 cde:f ] g
+TR(1) l4 n63,4^^^ cdef g^^^
+*/
+
+
