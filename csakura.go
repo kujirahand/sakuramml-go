@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+
 	"github.com/kujirahand/sakuramml-go/compiler"
 	"github.com/kujirahand/sakuramml-go/midi"
 )

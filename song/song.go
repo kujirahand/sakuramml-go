@@ -2,18 +2,19 @@ package song
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/kujirahand/sakuramml-go/track"
 	"github.com/kujirahand/sakuramml-go/utils"
 	"github.com/kujirahand/sakuramml-go/variable"
-	"strconv"
 )
 
 // LoopItem struct
 type LoopItem struct {
-	Index     int
-	Count     int
-	BeginNode interface{} // Node
-	EndNode   interface{} // Node
+	Index int
+	Count int
+	Start int
+	End   int
 }
 
 // EvalStrFunc type
@@ -21,16 +22,18 @@ type EvalStrFunc func(song *Song, src string) error
 
 // Song is info of song, include tracks
 type Song struct {
-	Debug     bool
-	Timebase  int
-	Tempo     int
-	TrackNo   int
-	Stack     []interface{} // values stack
-	Tracks    []*track.Track
-	LoopStack []*LoopItem
-	MoveNode  interface{} // Node
-	Variable  *variable.Variable
-	Eval      EvalStrFunc
+	Debug      bool
+	Timebase   int
+	Tempo      int
+	TrackNo    int
+	Stack      []SValue
+	Tracks     []*track.Track
+	LoopStack  []*LoopItem
+	Variable   *variable.Variable
+	Eval       EvalStrFunc
+	LastLineNo int
+	Index      int
+	JumpTo     int
 }
 
 // NewSong func
@@ -46,8 +49,7 @@ func NewSong() *Song {
 	}
 	s.Tempo = 120 // default Tempo (but not write)
 	s.TrackNo = 0
-	s.Stack = make([]interface{}, 0, 256)
-	s.MoveNode = nil
+	s.Stack = []SValue{}
 	s.Variable = variable.NewVariable()
 	return &s
 }
@@ -65,7 +67,7 @@ func (song *Song) PopStack() interface{} {
 
 // PushIValue func
 func (song *Song) PushIValue(v int) {
-	song.Stack = append(song.Stack, v)
+	song.Stack = append(song.Stack, SNumber(v))
 }
 
 // PopIValue func
@@ -75,19 +77,13 @@ func (song *Song) PopIValue() int {
 }
 
 // PushValue func
-func (song *Song) PushValue(v *variable.Value) {
-	if v.Type == variable.VTypeInt {
-		song.PushIValue(v.IValue)
-	} else if v.Type == variable.VTypeStr {
-		song.PushSValue(v.SValue)
-	} else {
-		song.Stack = append(song.Stack, v)
-	}
+func (song *Song) PushValue(v SValue) {
+	song.Stack = append(song.Stack, v)
 }
 
 // PushSValue func
 func (song *Song) PushSValue(v string) {
-	song.Stack = append(song.Stack, v)
+	song.Stack = append(song.Stack, SStr(v))
 }
 
 // PopSValue func

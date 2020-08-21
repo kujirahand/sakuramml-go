@@ -2,12 +2,10 @@ package compiler
 
 import (
 	"fmt"
-	"github.com/kujirahand/sakuramml-go/lexer"
-	"github.com/kujirahand/sakuramml-go/node"
-	"github.com/kujirahand/sakuramml-go/parser"
+
+	"github.com/kujirahand/sakuramml-go/mmlparser"
 	"github.com/kujirahand/sakuramml-go/song"
 	"github.com/kujirahand/sakuramml-go/sutoton"
-	"github.com/kujirahand/sakuramml-go/token"
 )
 
 const (
@@ -24,16 +22,9 @@ type Options struct {
 	Outfile  string
 }
 
-
 // Eval func
 func Eval(song *song.Song, src string) error {
-	// lex
-	tokens, err := lexer.Lex(src)
-	if err != nil {
-		return err
-	}
-	// parse
-	topNode, err := parser.Parse(tokens)
+	topNode, err := mmlparser.Parse(src)
 	if err != nil {
 		return err
 	}
@@ -42,22 +33,7 @@ func Eval(song *song.Song, src string) error {
 }
 
 // Run func
-func Run(topNode *node.Node, song *song.Song) error {
-	curNode := topNode
-	for curNode != nil {
-		// Run Node
-		err := curNode.Exec(curNode, song)
-		if err != nil {
-			return err
-		}
-		// Force Change Node?
-		if song.MoveNode != nil {
-			curNode = song.MoveNode.(*node.Node)
-			song.MoveNode = nil
-			continue
-		}
-		curNode = curNode.Next
-	}
+func Run(topNode *mmlparser.Node, song *song.Song) error {
 	return nil
 }
 
@@ -75,39 +51,18 @@ func Compile(opt *Options) (*song.Song, error) {
 	if err != nil {
 		return nil, err
 	}
-	// lex
-	if opt.Debug {
-		fmt.Println("--- lex ---")
-	}
-	tokens, err := lexer.Lex(src)
-	if err != nil {
-		return nil, err
-	}
-	if opt.Debug {
-		fmt.Println(token.TokensToString(tokens, " "))
-	}
 	// parse
 	if opt.Debug {
 		fmt.Println("--- parse ---")
 	}
-	topNode, err := parser.Parse(tokens)
+	node, err := mmlparser.Parse(src)
 	if err != nil {
 		return nil, err
-	}
-	if opt.Debug {
-		fmt.Println(topNode.ToStringAll())
 	}
 	// exec
 	if opt.Debug {
 		fmt.Println("--- exec ---")
 	}
-	// fmt.Println(s.ToString())
-	for {
-		err := Run(topNode, songObj)
-		if err != nil {
-			return nil, err
-		}
-		break
-	}
+	mmlparser.Run(node, songObj)
 	return songObj, nil
 }
