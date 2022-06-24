@@ -13,6 +13,8 @@ const (
 	NodeList
 	// NodeTone : cdefgab
 	NodeTone
+  // NodeCommand : vloq
+  NodeCommand
 	// NodeEOL : End of Line
 	NodeEOL
 	// NodeLoopBegin : NodeLoopBegin
@@ -29,6 +31,7 @@ var nodeTypeMap map[int]string = map[int]string{
 	Nop:           "Nop",
 	NodeList:      "NodeList",
 	NodeTone:      "NodeTone",
+  NodeCommand    "NodeCommand",
 	NodeEOL:       "NodeEOL",
 	NodeLoopBegin: "NodeLoopBegin",
 	NodeLoopEnd:   "NodeLoopEnd",
@@ -114,6 +117,25 @@ func (p *Node) ToString(level int) string {
 		res += n.ToString(level + 1)
 	}
 	return res
+}
+
+// CommandData: Data
+type CommandData struct {
+	Name rune
+  Value: NodeNumber
+}
+
+func (p CommandData) toString() string {
+	return string(p.Name) + string(p.Vakue)
+}
+
+// NewToneNode : tone node
+func NewCommandNode(tok Token, name rune, val NodeValue) *Node {
+  data := CommandData { Name: name, Value: val }
+  node := NewNode(CommandNode)
+  node.Data = data
+  node.Exec = runCommand
+  return &node
 }
 
 // CurLine : 現在パース中のライン情報
