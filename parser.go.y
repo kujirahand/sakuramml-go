@@ -14,7 +14,7 @@ package sakuramml
 %type<str> toneFlags
 // トークンの定義
 %token<token> LF WORD NUMBER
-%token<token> 'c' 'd' 'e' 'f' 'g' 'a' 'b' '#' '+' '-' '*' '[' ']' ':' 'l' 'v' 'q' 'o'
+%token<token> 'c' 'd' 'e' 'f' 'g' 'a' 'b' '#' '+' '-' '*' '[' ']' ':' 'l' 'v' 'q' 'o' ','
 %%
 
 // 文法規則を指定
@@ -45,8 +45,10 @@ loop
     | ':'               { $$ = NewLoopNodeBreak($1) }
 
 tone
-    : toneName toneFlags        { $$ = NewToneNode($1, $2) }
-    | toneName                  { $$ = NewToneNode($1, "") }
+    : toneName expr             { $$ = NewToneNode($1, "", $2) }
+    | toneName toneFlags expr   { $$ = NewToneNode($1, $2, $3) }
+    | toneName toneFlags        { $$ = NewToneNode($1, $2, nil) }
+    | toneName                  { $$ = NewToneNode($1, "", nil) }
 
 toneName
     : 'c' | 'd' | 'e' | 'f' | 'g' | 'a' | 'b'

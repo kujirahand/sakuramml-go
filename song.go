@@ -2,7 +2,6 @@ package sakuramml
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 )
 
@@ -57,15 +56,9 @@ func (song *Song) PopStack() interface{} {
 	if ilen > 0 {
 		iv := song.Stack[ilen-1]
 		song.Stack = song.Stack[0 : ilen-1]
-		log.Printf("pop=%s", iv.ToStr())
 		return iv
 	}
 	return nil
-}
-
-// PushIValue func
-func (song *Song) PushIValue(v int) {
-	song.Stack = append(song.Stack, SNumber(v))
 }
 
 // PopIValue func
@@ -74,21 +67,25 @@ func (song *Song) PopIValue() int {
 	return ToInt(v)
 }
 
+// PopSValue func
+func (song *Song) PopSValue() SValue {
+	v := song.PopStack()
+	return v.(SValue)
+}
+
+// PushIValue func
+func (song *Song) PushIValue(v int) {
+	song.Stack = append(song.Stack, SNumber(v))
+}
+
 // PushValue func
 func (song *Song) PushValue(v SValue) {
-	log.Printf("push=%s", v.ToStr())
 	song.Stack = append(song.Stack, v)
 }
 
 // PushSValue func
 func (song *Song) PushSValue(v string) {
 	song.Stack = append(song.Stack, SStr(v))
-}
-
-// PopSValue func
-func (song *Song) PopSValue() string {
-	v := song.PopStack()
-	return ToStr(v)
 }
 
 // PushLoop func
@@ -122,6 +119,53 @@ func (song *Song) TimePtrToStr(time int) string {
 	beat := ((time - meas*l1) / l4)
 	step := time % l4
 	return fmt.Sprintf("%3d:%2d:%3d", meas, beat+1, step)
+}
+
+func (song *Song) StrToStep(s string) int {
+	trk := song.CurTrack()
+	defLen := trk.Length
+	if s == "" {
+		return defLen
+	}
+	total := 0
+	sl := newSLexer(s, 0)
+	for !sl.isEOF() {
+		num := defLen
+		if isDigit(sl.peek()) {
+			n := sl.readInt(0)
+			num = song.NToStep(n)
+			countDot := 0
+			for sl.peek() == '.' {
+				countDot += 1
+				sl.next()
+			}
+			if countDot > 0 {
+				switch countDot {
+				case 1:
+					num = int(float64(num) * 1.5)
+				case 2:
+					num = int(float64(num) * (1.0 + 0.5 + 0.25))
+				case 3:
+					num = int(float64(num) * (1.0 + 0.5 + 0.25 + 0.12))
+				case 4:
+					num = int(float64(num) * (1.0 + 0.5 + 0.25 + 0.12 + 0.6))
+				default:
+					num = int(float64(num) * (1.0 + 0.5 + 0.25 + 0.12 + 0.6 + 0.3))
+				}
+			}
+
+		}
+		total += num
+		if sl.peek() != '^' {
+			break
+		}
+		sl.next()
+		// check only '^'
+		if sl.isEOF() { // like "l4^"
+			total += defLen
+		}
+	}
+	return total
 }
 
 func (song *Song) NToStep(n int) int {

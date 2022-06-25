@@ -132,16 +132,20 @@ state 10
 	expr  goto 27
 
 state 11
+	tone:  toneName.expr 
+	tone:  toneName.toneFlags expr 
 	tone:  toneName.toneFlags 
-	tone:  toneName.    (18)
+	tone:  toneName.    (20)
 
-	'#'  shift 30
-	'+'  shift 31
-	'-'  shift 32
-	.  reduce 18 (src line 49)
+	NUMBER  shift 24
+	'#'  shift 31
+	'+'  shift 32
+	'-'  shift 33
+	.  reduce 20 (src line 51)
 
-	toneFlag  goto 29
-	toneFlags  goto 28
+	expr  goto 28
+	toneFlag  goto 30
+	toneFlags  goto 29
 
 state 12
 	loop:  '['.expr 
@@ -150,7 +154,7 @@ state 12
 	NUMBER  shift 24
 	.  reduce 14 (src line 43)
 
-	expr  goto 33
+	expr  goto 34
 
 state 13
 	loop:  ']'.    (15)
@@ -165,45 +169,45 @@ state 14
 
 
 state 15
-	toneName:  'c'.    (19)
+	toneName:  'c'.    (21)
 
-	.  reduce 19 (src line 51)
+	.  reduce 21 (src line 53)
 
 
 state 16
-	toneName:  'd'.    (20)
+	toneName:  'd'.    (22)
 
-	.  reduce 20 (src line 52)
+	.  reduce 22 (src line 54)
 
 
 state 17
-	toneName:  'e'.    (21)
+	toneName:  'e'.    (23)
 
-	.  reduce 21 (src line 52)
+	.  reduce 23 (src line 54)
 
 
 state 18
-	toneName:  'f'.    (22)
+	toneName:  'f'.    (24)
 
-	.  reduce 22 (src line 52)
+	.  reduce 24 (src line 54)
 
 
 state 19
-	toneName:  'g'.    (23)
+	toneName:  'g'.    (25)
 
-	.  reduce 23 (src line 52)
+	.  reduce 25 (src line 54)
 
 
 state 20
-	toneName:  'a'.    (24)
+	toneName:  'a'.    (26)
 
-	.  reduce 24 (src line 52)
+	.  reduce 26 (src line 54)
 
 
 state 21
-	toneName:  'b'.    (25)
+	toneName:  'b'.    (27)
 
-	.  reduce 25 (src line 52)
+	.  reduce 27 (src line 54)
 
 
 state 22
@@ -243,61 +247,76 @@ state 27
 
 
 state 28
-	tone:  toneName toneFlags.    (17)
-	toneFlags:  toneFlags.toneFlag 
+	tone:  toneName expr.    (17)
 
-	'#'  shift 30
-	'+'  shift 31
-	'-'  shift 32
 	.  reduce 17 (src line 47)
 
-	toneFlag  goto 34
 
 state 29
-	toneFlags:  toneFlag.    (26)
+	tone:  toneName toneFlags.expr 
+	tone:  toneName toneFlags.    (19)
+	toneFlags:  toneFlags.toneFlag 
 
-	.  reduce 26 (src line 54)
+	NUMBER  shift 24
+	'#'  shift 31
+	'+'  shift 32
+	'-'  shift 33
+	.  reduce 19 (src line 50)
 
+	expr  goto 35
+	toneFlag  goto 36
 
 state 30
-	toneFlag:  '#'.    (28)
+	toneFlags:  toneFlag.    (28)
 
-	.  reduce 28 (src line 58)
+	.  reduce 28 (src line 56)
 
 
 state 31
-	toneFlag:  '+'.    (29)
+	toneFlag:  '#'.    (30)
 
-	.  reduce 29 (src line 59)
+	.  reduce 30 (src line 60)
 
 
 state 32
-	toneFlag:  '-'.    (30)
+	toneFlag:  '+'.    (31)
 
-	.  reduce 30 (src line 59)
+	.  reduce 31 (src line 61)
 
 
 state 33
+	toneFlag:  '-'.    (32)
+
+	.  reduce 32 (src line 61)
+
+
+state 34
 	loop:  '[' expr.    (13)
 
 	.  reduce 13 (src line 41)
 
 
-state 34
-	toneFlags:  toneFlags toneFlag.    (27)
+state 35
+	tone:  toneName toneFlags expr.    (18)
 
-	.  reduce 27 (src line 56)
+	.  reduce 18 (src line 49)
 
 
-24 terminals, 10 nonterminals
-31 grammar rules, 35/16000 states
+state 36
+	toneFlags:  toneFlags toneFlag.    (29)
+
+	.  reduce 29 (src line 58)
+
+
+25 terminals, 10 nonterminals
+33 grammar rules, 37/16000 states
 15 shift/reduce, 0 reduce/reduce conflicts reported
 59 working sets used
-memory: parser 17/240000
+memory: parser 20/240000
 0 extra closures
-41 shift entries, 1 exceptions
-15 goto entries
+43 shift entries, 1 exceptions
+17 goto entries
 3 entries saved by goto default
-Optimizer space used: output 36/240000
-36 table entries, 2 zero
-maximum spread: 24, maximum offset: 28
+Optimizer space used: output 43/240000
+43 table entries, 6 zero
+maximum spread: 24, maximum offset: 29

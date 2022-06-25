@@ -1,6 +1,6 @@
 package sakuramml
 
-import "log"
+import "fmt"
 
 // Run : 実行
 func Run(node *Node, so *Song) error {
@@ -36,8 +36,9 @@ func runNodeList(node *Node, so *Song) error {
 }
 
 func runNumber(node *Node, so *Song) error {
-	num := node.Data.(ValueData).num
-	so.PushValue(SNumber(num))
+	numData := node.Data.(ValueData)
+	fmt.Printf("runNumber=%s\n", numData.str)
+	so.PushSValue(numData.str)
 	return nil
 }
 
@@ -92,35 +93,22 @@ func runTone(node *Node, song *Song) error {
 }
 
 func runCommand(node *Node, song *Song) error {
-	v := 0
+	var v SValue
 	trk := song.CurTrack()
 	data := node.Data.(CommandData)
 	err := data.Value.Exec(data.Value, song)
-	if err != nil {
-		switch data.Name {
-		case 'v':
-			v = 100
-		case 'l':
-			v = trk.Length
-		case 'o':
-			v = 5
-		case 'q':
-			v = 90
-		}
-	} else {
-		log.Printf("cmd=%d", song.Stack[len(song.Stack)-1])
-		v = song.PopIValue()
+	if err == nil {
+		v = song.PopSValue()
 	}
-	log.Printf("cmd=%d", v)
 	switch data.Name {
 	case 'v':
-		trk.Velocity = v
+		trk.Velocity = v.ToInt()
 	case 'l':
-		trk.Length = song.NToStep(v)
+		trk.Length = song.StrToStep(v.ToStr())
 	case 'q':
-		trk.Qgate = v
+		trk.Qgate = v.ToInt()
 	case 'o':
-		trk.Octave = v
+		trk.Octave = v.ToInt()
 	}
 	println("runCommand=", string(data.Name), v)
 	return nil
@@ -128,10 +116,12 @@ func runCommand(node *Node, song *Song) error {
 
 func runLoopBegin(node *Node, so *Song) error {
 	cnt := 2
-	if node.Children != nil || len(node.Children) > 0 {
-		n := node.Children[0]
-		n.Exec(n, so)
-		cnt = so.PopIValue()
+	if node.Children != nil && len(node.Children) > 0 {
+		tmp := so.Index
+		runNodeList(node, so)
+		s := so.PopSValue()
+		cnt = s.ToInt()
+		so.Index = tmp
 	}
 	it := LoopItem{Count: cnt, Index: 0, Start: so.Index + 1, End: -1}
 	so.PushLoop(&it)
@@ -140,11 +130,13 @@ func runLoopBegin(node *Node, so *Song) error {
 
 func runLoopEnd(node *Node, so *Song) error {
 	it := so.PeekLoop()
+	it.End = so.Index + 1
 	it.Index++
-	if it.Count >= it.Index {
+	if it.Count <= it.Index {
 		so.PopLoop()
+		so.JumpTo = it.End
 	} else {
-		it.End = so.Index + 1
+		so.JumpTo = it.Start
 	}
 	return nil
 }
@@ -153,7 +145,7 @@ func runLoopBreak(node *Node, so *Song) error {
 	it := so.PeekLoop()
 	if (it.Count - 1) == it.Index {
 		so.PopLoop()
-		so.Index = it.End
+		so.JumpTo = it.End
 	}
 	return nil
 }

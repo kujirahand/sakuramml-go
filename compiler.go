@@ -20,7 +20,7 @@ type CompilerOptions struct {
 
 // Eval func
 func Eval(song *Song, src string) error {
-	topNode, err := Parse(src)
+	topNode, err := Parse(src, 0)
 	if err != nil {
 		return err
 	}
@@ -51,7 +51,7 @@ func Compile(opt *CompilerOptions) (*Song, error) {
 	if opt.Debug {
 		fmt.Println("--- parse ---")
 	}
-	node, err := Parse(src)
+	node, err := Parse(src, 0)
 	if err != nil {
 		return nil, err
 	}

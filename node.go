@@ -80,8 +80,9 @@ func (p ValueData) toString() string {
 
 // ToneData : Data
 type ToneData struct {
-	Name rune
-	Flag string
+	Name   rune
+	Flag   string
+	Length *Node
 }
 
 func (p ToneData) toString() string {
@@ -89,11 +90,12 @@ func (p ToneData) toString() string {
 }
 
 // NewToneNode : tone node
-func NewToneNode(tok Token, flag string) *Node {
+func NewToneNode(tok Token, flag string, len *Node) *Node {
 	node := NewNode(NodeTone)
 	node.Data = ToneData{
-		Name: rune(tok.label[0]),
-		Flag: flag,
+		Name:   rune(tok.label[0]),
+		Flag:   flag,
+		Length: len,
 	}
 	node.Exec = runTone
 	return node
@@ -170,10 +172,9 @@ func NewNumberNode(t Token) *Node {
 // NewLoopNodeBegin : loop begin
 func NewLoopNodeBegin(t Token, expr *Node) *Node {
 	n := NewNode(NodeLoopBegin)
-	if expr == nil {
-		expr = NewNumberNode(Token{label: "2", value: 2})
+	if expr != nil { // it has loop counter
+		n.Children = []*Node{expr}
 	}
-	n.Children = []*Node{expr}
 	n.Exec = runLoopBegin
 	return n
 }

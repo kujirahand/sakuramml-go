@@ -44,6 +44,7 @@ var yyToknames = [...]string{
 	"'v'",
 	"'q'",
 	"'o'",
+	"','",
 }
 
 var yyStatenames = [...]string{}
@@ -52,7 +53,7 @@ const yyEofCode = 1
 const yyErrCode = 2
 const yyInitialStackSize = 16
 
-//line parser.go.y:62
+//line parser.go.y:64
 
 //line yacctab:1
 var yyExca = [...]int8{
@@ -63,52 +64,53 @@ var yyExca = [...]int8{
 
 const yyPrivate = 57344
 
-const yyLast = 36
+const yyLast = 43
 
 var yyAct = [...]int8{
-	6, 29, 28, 15, 16, 17, 18, 19, 20, 21,
-	24, 30, 31, 32, 12, 13, 14, 7, 8, 10,
-	9, 3, 23, 11, 22, 5, 4, 2, 1, 0,
-	34, 25, 26, 27, 0, 33,
+	6, 30, 29, 15, 16, 17, 18, 19, 20, 21,
+	24, 11, 23, 5, 12, 13, 14, 7, 8, 10,
+	9, 25, 26, 27, 28, 34, 24, 3, 4, 2,
+	22, 36, 1, 0, 31, 32, 33, 0, 0, 0,
+	0, 0, 35,
 }
 
 var yyPact = [...]int16{
 	-4, -1000, -4, -1000, -1000, -1000, -1000, 4, 4, 4,
-	4, -3, 4, -1000, -1000, -1000, -1000, -1000, -1000, -1000,
-	-1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -3, -1000,
-	-1000, -1000, -1000, -1000, -1000,
+	4, 20, 4, -1000, -1000, -1000, -1000, -1000, -1000, -1000,
+	-1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, 20,
+	-1000, -1000, -1000, -1000, -1000, -1000, -1000,
 }
 
 var yyPgo = [...]int8{
-	0, 28, 27, 21, 26, 25, 22, 23, 1, 2,
+	0, 32, 29, 27, 28, 13, 12, 11, 1, 2,
 }
 
 var yyR1 = [...]int8{
 	0, 1, 2, 2, 2, 3, 3, 3, 3, 3,
-	3, 3, 6, 5, 5, 5, 5, 4, 4, 7,
-	7, 7, 7, 7, 7, 7, 9, 9, 8, 8,
-	8,
+	3, 3, 6, 5, 5, 5, 5, 4, 4, 4,
+	4, 7, 7, 7, 7, 7, 7, 7, 9, 9,
+	8, 8, 8,
 }
 
 var yyR2 = [...]int8{
 	0, 1, 0, 1, 2, 1, 1, 1, 2, 2,
-	2, 2, 1, 2, 1, 1, 1, 2, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 2, 1, 1,
-	1,
+	2, 2, 1, 2, 1, 1, 1, 2, 3, 2,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 2,
+	1, 1, 1,
 }
 
 var yyChk = [...]int16{
 	-1000, -1, -2, -3, -4, -5, 4, 21, 22, 24,
 	23, -7, 18, 19, 20, 7, 8, 9, 10, 11,
-	12, 13, -3, -6, 6, -6, -6, -6, -9, -8,
-	14, 15, 16, -6, -8,
+	12, 13, -3, -6, 6, -6, -6, -6, -6, -9,
+	-8, 14, 15, 16, -6, -6, -8,
 }
 
 var yyDef = [...]int8{
 	2, -2, 1, 3, 5, 6, 7, 0, 0, 0,
-	0, 18, 14, 15, 16, 19, 20, 21, 22, 23,
-	24, 25, 4, 8, 12, 9, 10, 11, 17, 26,
-	28, 29, 30, 13, 27,
+	0, 20, 14, 15, 16, 21, 22, 23, 24, 25,
+	26, 27, 4, 8, 12, 9, 10, 11, 17, 19,
+	28, 30, 31, 32, 13, 18, 29,
 }
 
 var yyTok1 = [...]int8{
@@ -116,7 +118,7 @@ var yyTok1 = [...]int8{
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 14, 3, 3, 3, 3,
-	3, 3, 17, 15, 3, 16, 3, 3, 3, 3,
+	3, 3, 17, 15, 25, 16, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 20, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
@@ -561,23 +563,35 @@ yydefault:
 		yyDollar = yyS[yypt-2 : yypt+1]
 //line parser.go.y:48
 		{
-			yyVAL.node = NewToneNode(yyDollar[1].token, yyDollar[2].str)
+			yyVAL.node = NewToneNode(yyDollar[1].token, "", yyDollar[2].node)
 		}
 	case 18:
-		yyDollar = yyS[yypt-1 : yypt+1]
+		yyDollar = yyS[yypt-3 : yypt+1]
 //line parser.go.y:49
 		{
-			yyVAL.node = NewToneNode(yyDollar[1].token, "")
+			yyVAL.node = NewToneNode(yyDollar[1].token, yyDollar[2].str, yyDollar[3].node)
 		}
-	case 26:
+	case 19:
+		yyDollar = yyS[yypt-2 : yypt+1]
+//line parser.go.y:50
+		{
+			yyVAL.node = NewToneNode(yyDollar[1].token, yyDollar[2].str, nil)
+		}
+	case 20:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:55
+//line parser.go.y:51
+		{
+			yyVAL.node = NewToneNode(yyDollar[1].token, "", nil)
+		}
+	case 28:
+		yyDollar = yyS[yypt-1 : yypt+1]
+//line parser.go.y:57
 		{
 			yyVAL.str = yyDollar[1].token.label
 		}
-	case 27:
+	case 29:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:56
+//line parser.go.y:58
 		{
 			yyVAL.str = yyDollar[1].str + yyDollar[2].token.label
 		}

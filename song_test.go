@@ -21,6 +21,28 @@ func TestTrackSortEvents(t *testing.T) {
 	}
 }
 
+func TestStrToStep(t *testing.T) {
+	song := NewSong()
+	song.Timebase = 96
+	l4 := song.StrToStep("4")
+	if l4 != 96 {
+		t.Errorf("StrToStep failed timebase=96 l4 !=%d", l4)
+	}
+	song.CurTrack().Length = song.Timebase
+	l2 := song.StrToStep("4^4")
+	if l2 != 96*2 {
+		t.Errorf("StrToStep failed timebase=96 l2 !=%d", l2)
+	}
+	l2a := song.StrToStep("4^")
+	if l2a != 96*2 {
+		t.Errorf("StrToStep failed timebase=96 l2a !=%d", l2a)
+	}
+	l4dot := song.StrToStep("4.")
+	if l4dot != 96*1.5 {
+		t.Errorf("StrToStep failed timebase=96 l4. !=%d", l4dot)
+	}
+}
+
 /*
 func TestAddTempoEvent(t *testing.T) {
 	// tempo = 120 ... 0xFF 0x51 0x03 0x07 0xA1 0x20
