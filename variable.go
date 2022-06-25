@@ -6,10 +6,10 @@ import "strconv"
 type VType = int
 
 const (
-	VTypeNone  VType = 0
-	VTypeInt         = 1
-	VTypeStr         = 2
-	VTypeArray       = 3
+	VTypeNone  = 0
+	VTypeInt   = 1
+	VTypeStr   = 2
+	VTypeArray = 3
 )
 
 // Value struct
@@ -110,10 +110,7 @@ func (vv *Variable) GetSValue(name string, def string) string {
 
 func (vv *Variable) Exists(name string) bool {
 	v := vv.GetValue(name)
-	if v == nil {
-		return false
-	}
-	return true
+	return (v != nil)
 }
 
 func (vv *Variable) SetIValue(name string, value int) {

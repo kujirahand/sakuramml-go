@@ -52,7 +52,7 @@ const yyEofCode = 1
 const yyErrCode = 2
 const yyInitialStackSize = 16
 
-//line parser.go.y:66
+//line parser.go.y:62
 
 //line yacctab:1
 var yyExca = [...]int8{
@@ -63,46 +63,52 @@ var yyExca = [...]int8{
 
 const yyPrivate = 57344
 
-const yyLast = 26
+const yyLast = 36
 
 var yyAct = [...]int8{
-	6, 20, 19, 11, 12, 13, 14, 15, 16, 17,
-	25, 21, 22, 23, 8, 9, 10, 3, 7, 24,
-	18, 26, 5, 4, 2, 1,
+	6, 29, 28, 15, 16, 17, 18, 19, 20, 21,
+	24, 30, 31, 32, 12, 13, 14, 7, 8, 10,
+	9, 3, 23, 11, 22, 5, 4, 2, 1, 0,
+	34, 25, 26, 27, 0, 33,
 }
 
 var yyPact = [...]int16{
-	-4, -1000, -4, -1000, -1000, -1000, -1000, -3, 4, -1000,
-	-1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -3,
-	-1000, -1000, -1000, -1000, -1000, -1000, -1000,
+	-4, -1000, -4, -1000, -1000, -1000, -1000, 4, 4, 4,
+	4, -3, 4, -1000, -1000, -1000, -1000, -1000, -1000, -1000,
+	-1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -3, -1000,
+	-1000, -1000, -1000, -1000, -1000,
 }
 
 var yyPgo = [...]int8{
-	0, 25, 24, 17, 23, 22, 19, 18, 1, 2,
+	0, 28, 27, 21, 26, 25, 22, 23, 1, 2,
 }
 
 var yyR1 = [...]int8{
-	0, 1, 2, 2, 2, 3, 3, 3, 6, 5,
-	5, 5, 5, 4, 4, 7, 7, 7, 7, 7,
-	7, 7, 9, 9, 8, 8, 8,
+	0, 1, 2, 2, 2, 3, 3, 3, 3, 3,
+	3, 3, 6, 5, 5, 5, 5, 4, 4, 7,
+	7, 7, 7, 7, 7, 7, 9, 9, 8, 8,
+	8,
 }
 
 var yyR2 = [...]int8{
-	0, 1, 0, 1, 2, 1, 1, 1, 1, 2,
-	1, 1, 1, 2, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 2, 1, 1, 1,
+	0, 1, 0, 1, 2, 1, 1, 1, 2, 2,
+	2, 2, 1, 2, 1, 1, 1, 2, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 2, 1, 1,
+	1,
 }
 
 var yyChk = [...]int16{
-	-1000, -1, -2, -3, -4, -5, 4, -7, 18, 19,
-	20, 7, 8, 9, 10, 11, 12, 13, -3, -9,
-	-8, 14, 15, 16, -6, 6, -8,
+	-1000, -1, -2, -3, -4, -5, 4, 21, 22, 24,
+	23, -7, 18, 19, 20, 7, 8, 9, 10, 11,
+	12, 13, -3, -6, 6, -6, -6, -6, -9, -8,
+	14, 15, 16, -6, -8,
 }
 
 var yyDef = [...]int8{
-	2, -2, 1, 3, 5, 6, 7, 14, 10, 11,
-	12, 15, 16, 17, 18, 19, 20, 21, 4, 13,
-	22, 24, 25, 26, 9, 8, 23,
+	2, -2, 1, 3, 5, 6, 7, 0, 0, 0,
+	0, 18, 14, 15, 16, 19, 20, 21, 22, 23,
+	24, 25, 4, 8, 12, 9, 10, 11, 17, 26,
+	28, 29, 30, 13, 27,
 }
 
 var yyTok1 = [...]int8{
@@ -498,56 +504,80 @@ yydefault:
 			yyVAL.node = NewNode(NodeEOL)
 		}
 	case 8:
-		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:43
+		yyDollar = yyS[yypt-2 : yypt+1]
+//line parser.go.y:33
 		{
-			yyVAL.node = NewNumberNode(yyDollar[1].token)
+			yyVAL.node = NewCommandNode(yyDollar[1].token, 'l', yyDollar[2].node)
 		}
 	case 9:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:46
+//line parser.go.y:34
 		{
-			yyVAL.node = NewLoopNodeBegin(yyDollar[1].token, yyDollar[2].node)
+			yyVAL.node = NewCommandNode(yyDollar[1].token, 'v', yyDollar[2].node)
 		}
 	case 10:
-		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:47
+		yyDollar = yyS[yypt-2 : yypt+1]
+//line parser.go.y:35
 		{
-			yyVAL.node = NewLoopNodeBegin(yyDollar[1].token, nil)
+			yyVAL.node = NewCommandNode(yyDollar[1].token, 'o', yyDollar[2].node)
 		}
 	case 11:
-		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:48
+		yyDollar = yyS[yypt-2 : yypt+1]
+//line parser.go.y:36
 		{
-			yyVAL.node = NewLoopNodeEnd(yyDollar[1].token)
+			yyVAL.node = NewCommandNode(yyDollar[1].token, 'q', yyDollar[2].node)
 		}
 	case 12:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:49
+//line parser.go.y:39
 		{
-			yyVAL.node = NewLoopNodeBreak(yyDollar[1].token)
+			yyVAL.node = NewNumberNode(yyDollar[1].token)
 		}
 	case 13:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:52
+//line parser.go.y:42
 		{
-			yyVAL.node = NewToneNode(yyDollar[1].token, yyDollar[2].str)
+			yyVAL.node = NewLoopNodeBegin(yyDollar[1].token, yyDollar[2].node)
 		}
 	case 14:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:53
+//line parser.go.y:43
+		{
+			yyVAL.node = NewLoopNodeBegin(yyDollar[1].token, nil)
+		}
+	case 15:
+		yyDollar = yyS[yypt-1 : yypt+1]
+//line parser.go.y:44
+		{
+			yyVAL.node = NewLoopNodeEnd(yyDollar[1].token)
+		}
+	case 16:
+		yyDollar = yyS[yypt-1 : yypt+1]
+//line parser.go.y:45
+		{
+			yyVAL.node = NewLoopNodeBreak(yyDollar[1].token)
+		}
+	case 17:
+		yyDollar = yyS[yypt-2 : yypt+1]
+//line parser.go.y:48
+		{
+			yyVAL.node = NewToneNode(yyDollar[1].token, yyDollar[2].str)
+		}
+	case 18:
+		yyDollar = yyS[yypt-1 : yypt+1]
+//line parser.go.y:49
 		{
 			yyVAL.node = NewToneNode(yyDollar[1].token, "")
 		}
-	case 22:
+	case 26:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:59
+//line parser.go.y:55
 		{
 			yyVAL.str = yyDollar[1].token.label
 		}
-	case 23:
+	case 27:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:60
+//line parser.go.y:56
 		{
 			yyVAL.str = yyDollar[1].str + yyDollar[2].token.label
 		}

@@ -2,6 +2,7 @@ package sakuramml
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 )
 
@@ -56,6 +57,7 @@ func (song *Song) PopStack() interface{} {
 	if ilen > 0 {
 		iv := song.Stack[ilen-1]
 		song.Stack = song.Stack[0 : ilen-1]
+		log.Printf("pop=%s", iv.ToStr())
 		return iv
 	}
 	return nil
@@ -74,6 +76,7 @@ func (song *Song) PopIValue() int {
 
 // PushValue func
 func (song *Song) PushValue(v SValue) {
+	log.Printf("push=%s", v.ToStr())
 	song.Stack = append(song.Stack, v)
 }
 
@@ -122,8 +125,11 @@ func (song *Song) TimePtrToStr(time int) string {
 }
 
 func (song *Song) NToStep(n int) int {
+	if n == 0 {
+		return 0
+	}
 	tb := song.Timebase
-	step := tb / n
+	step := int(float64(tb) * 4.0 / float64(n))
 	return step
 }
 

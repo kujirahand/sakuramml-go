@@ -146,28 +146,33 @@ func CountKey(source, key string) int {
 
 // ToInt Function
 func ToInt(v interface{}) int {
-	switch v.(type) {
-	case int:
-		return v.(int)
+	var result int = 0
+	switch v := v.(type) {
 	case string:
-		iv, err := strconv.Atoi(v.(string))
-		if err != nil {
-			return 0
+		iv, err := strconv.Atoi(v)
+		if err == nil {
+			result = iv
 		}
-		return iv
-	default:
-		return 0
+	case int:
+		result = v
+	case float64:
+	case SNumber:
+		result = int(v)
 	}
+	return result
 }
 
 // ToStr Function
 func ToStr(v interface{}) string {
-	switch v.(type) {
-	case int:
-		return strconv.Itoa(v.(int))
+	var result string
+	switch v := v.(type) {
 	case string:
-		return v.(string)
-	default:
-		return ""
+		result = v
+	case int:
+		result = strconv.Itoa(v)
+	case SNumber:
+	case float64:
+		result = strconv.FormatFloat(float64(v), 'f', -1, 64)
 	}
+	return result
 }

@@ -30,14 +30,10 @@ line
     : tone
     | loop
     | LF                { $$ = NewNode(NodeEOL) }
-/*
-    | mmlparam
-mmlparam
-    : 'v' expr          { $$ = NewCommandNode($1, 'v', $2) }
     | 'l' expr          { $$ = NewCommandNode($1, 'l', $2) }
+    | 'v' expr          { $$ = NewCommandNode($1, 'v', $2) }
     | 'o' expr          { $$ = NewCommandNode($1, 'o', $2) }
     | 'q' expr          { $$ = NewCommandNode($1, 'q', $2) }
-*/
 
 expr
     : NUMBER            { $$ = NewNumberNode($1) }
