@@ -20,7 +20,6 @@ INT PAN=10
 yPAN,N1 cdef 
 yPAN,N2 gfed
 
-/*
 y10,0 cdef y10,127 cdef
 Sub { ceg } egb
 
@@ -38,7 +37,7 @@ AA;
 TR(1) l4 cdef | gfed | c^^^
 v50q100
 c4,-%10,+50
-*/
+
 /*
 p%0 [4 cde:f ] g
 TR(1) l4 n63,4^^^ cdef g^^^

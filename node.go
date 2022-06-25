@@ -27,6 +27,12 @@ const (
 	NodeTime
 	// NodeTimeSig : TimeSignature
 	NodeTimeSig
+	// NodeComment: Comment
+	NodeComment
+	// NodeLet : NodeLet
+	NodeLet
+	// NodeGetVar : Get Variable
+	NodeGetVar
 )
 
 var nodeTypeMap map[int]string = map[int]string{
@@ -41,6 +47,9 @@ var nodeTypeMap map[int]string = map[int]string{
 	NodeNumber:    "NodeNumber",
 	NodeTime:      "NodeTime",
 	NodeTimeSig:   "NodeTimeSig",
+	NodeComment:   "NodeComment",
+	NodeLet:       "NodeLet",
+	NodeGetVar:    "NodeGetVar",
 }
 
 // ExecFunc func
@@ -129,8 +138,10 @@ func (p *Node) ToString(level int) string {
 
 // CommandData: Data
 type CommandData struct {
-	Name  string
-	Value *Node
+	Name   string
+	Value  *Node
+	Value2 *Node
+	Value3 *Node
 }
 
 func (p CommandData) toString() string {
@@ -147,6 +158,28 @@ func NewCommandNode(tok Token, name string, val *Node) *Node {
 		name = tok.label
 	}
 	data := CommandData{Name: name, Value: val}
+	node := NewNode(NodeCommand)
+	node.Data = data
+	node.Exec = runCommand
+	return node
+}
+
+func NewCommandNode2(tok Token, name string, v1 *Node, v2 *Node) *Node {
+	if name == "WORD" {
+		name = tok.label
+	}
+	data := CommandData{Name: name, Value: v1, Value2: v2}
+	node := NewNode(NodeCommand)
+	node.Data = data
+	node.Exec = runCommand
+	return node
+}
+
+func NewCommandNode3(tok Token, name string, v1 *Node, v2 *Node, v3 *Node) *Node {
+	if name == "WORD" {
+		name = tok.label
+	}
+	data := CommandData{Name: name, Value: v1, Value2: v2, Value3: v3}
 	node := NewNode(NodeCommand)
 	node.Data = data
 	node.Exec = runCommand
@@ -251,5 +284,46 @@ func NewTimeSigNode(tok Token, v1 *Node, v2 *Node) *Node {
 		v3:   nil,
 	}
 	node.Exec = runTimeSig
+	return node
+}
+
+// NewCommentNode : Comment
+func NewCommentNode(tok Token) *Node {
+	node := NewNode(NodeComment)
+	node.Exec = runNop
+	return node
+}
+
+// ParamsData : Params
+type ParamsData struct {
+	tag  string
+	name string
+	v1   *Node
+	v2   *Node
+	v3   *Node
+}
+
+func (p ParamsData) toString() string {
+	return p.tag + ":" + p.name + "(?:?:?)"
+}
+
+func NewLetNode(tok Token, word Token, expr *Node) *Node {
+	node := NewNode(NodeLet)
+	node.Data = ParamsData{tag: tok.label, name: word.label, v1: expr}
+	node.Exec = runLet
+	return node
+}
+
+func NewLetNode3(tok Token, word Token, v1 *Node, v2 *Node, v3 *Node) *Node {
+	node := NewNode(NodeLet)
+	node.Data = ParamsData{tag: tok.label, name: word.label, v1: v1, v2: v2, v3: v3}
+	node.Exec = runLet
+	return node
+}
+
+func NewGetVarNode(tok Token) *Node {
+	node := NewNode(NodeGetVar)
+	node.Data = ParamsData{name: tok.label}
+	node.Exec = runGetVar
 	return node
 }

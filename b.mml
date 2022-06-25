@@ -1,0 +1,5 @@
+TR(1)
+cdef
+
+INT A=4
+[A c ]

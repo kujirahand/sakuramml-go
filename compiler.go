@@ -36,12 +36,7 @@ func Eval(song *Song, src string) error {
 		return err
 	}
 	// run
-	return CompilerRun(topNode, song)
-}
-
-// Run func
-func CompilerRun(topNode *Node, song *Song) error {
-	return nil
+	return SakuraRun(topNode, song)
 }
 
 // Compile MML
@@ -54,7 +49,7 @@ func Compile(opt *CompilerOptions) (*Song, error) {
 	// sutoton
 	SakuraLog("--- Sutoton ---")
 	src, err := SutotonConvert(opt.Source)
-	SakuraLog(src)
+	// SakuraLog(src)
 	if err != nil {
 		return nil, err
 	}

@@ -83,3 +83,39 @@ func (p *SLexer) skipSpace() {
 func (p *SLexer) getLineInfo() LineInfo {
 	return LineInfo{LineNo: p.lineno, FileNo: p.fileno}
 }
+
+func (p *SLexer) getChars(n int) string {
+	result := ""
+	for !p.isEOF() {
+		if n > 0 {
+			result += string(p.nextRune())
+			n--
+			continue
+		}
+		break
+	}
+	return result
+}
+
+func (p *SLexer) testStr(test string) bool {
+	r := []rune(test)
+	i := p.index
+	realStr := p.getChars(len(r))
+	p.index = i
+	return test == realStr
+}
+
+func (p *SLexer) skipTo(test string) int {
+	countLF := 0
+	for !p.isEOF() {
+		if p.peek() == '\n' {
+			countLF++
+		}
+		if p.testStr(test) {
+			p.index += len([]rune(test))
+			break
+		}
+		p.next()
+	}
+	return countLF
+}

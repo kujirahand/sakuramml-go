@@ -136,6 +136,15 @@ func runCommand(node *Node, song *Song) error {
 	case "o":
 		trk.Octave = InRange(0, v.ToInt(), 10)
 	case "VOICE", "Voice", "@":
+		// msb, lsb
+		if data.Value2 != nil && data.Value3 != nil {
+			data.Value2.Exec(data.Value2, song)
+			msb := song.PopIValue()
+			data.Value3.Exec(data.Value3, song)
+			lsb := song.PopIValue()
+			trk.AddCC(trk.Time-1, 0, msb)
+			trk.AddCC(trk.Time-1, 0x20, lsb)
+		}
 		trk.AddProgramChange(trk.Time, v.ToInt())
 	case "TR", "Track", "TRACK":
 		song.TrackNo = v.ToInt()
@@ -149,6 +158,12 @@ func runCommand(node *Node, song *Song) error {
 		trk.OctaveOnce += 1
 	case "\"":
 		trk.OctaveOnce -= 1
+	case "y":
+		if data.Value2 != nil {
+			data.Value2.Exec(data.Value2, song)
+			v2 := song.PopIValue()
+			trk.AddCC(trk.Time, v.ToInt(), v2)
+		}
 	}
 	// println("@@@runCommand=", string(data.Name), v.ToStr())
 	return nil
@@ -161,6 +176,7 @@ func runLoopBegin(node *Node, so *Song) error {
 		runNodeList(node, so)
 		s := so.PopSValue()
 		cnt = s.ToInt()
+		// SakuraLog(fmt.Sprintf("Loop=%s,%d", s.ToStr(), cnt))
 		so.Index = tmp
 	}
 	it := LoopItem{Count: cnt, Index: 0, Start: so.Index + 1, End: -1}
@@ -216,5 +232,30 @@ func runTimeSig(node *Node, song *Song) error {
 	SakuraLog(fmt.Sprintf("TimeSig=%d,%d\n", v1, v2))
 	song.TimeSigFrac = v1
 	song.TimeSigDeno = v2
+	return nil
+}
+
+func runLet(node *Node, song *Song) error {
+	params := node.Data.(ParamsData)
+	tag := params.tag
+	name := params.name
+	if tag == "INT" {
+		params.v1.Exec(params.v1, song)
+		iv := song.PopIValue()
+		song.Variable.SetIValue(name, iv)
+	} else if tag == "STR" {
+		params.v1.Exec(params.v1, song)
+		sv := song.PopSValue()
+		song.Variable.SetSValue(name, sv.ToStr())
+	}
+	return nil
+}
+
+func runGetVar(node *Node, song *Song) error {
+	params := node.Data.(ParamsData)
+	name := params.name
+	val := song.Variable.GetValue(name)
+	// fmt.Printf("getvar %s = %s\n", name, val.ToString())
+	song.PushSValue(val.ToString())
 	return nil
 }

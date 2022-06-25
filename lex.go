@@ -79,6 +79,12 @@ func (p *Lexer) getToken(lval *yySymType) int {
 		p.slexer.next()
 		return LF
 	}
+	// Comment ?
+	if p.slexer.testStr("/*") {
+		p.slexer.index += 2
+		p.slexer.lineno += p.slexer.skipTo("*/")
+		return COMMENT
+	}
 	// NUMBER ?
 	if isDigit(c) || c == '^' || c == '%' || (c == '-' && isDigit(p.slexer.peekNext())) {
 		return p.lexNumber(lval)
@@ -100,6 +106,16 @@ func (p *Lexer) getToken(lval *yySymType) int {
 		return p.lexWord(lval)
 	}
 	// 記号
+	if c == '{' {
+		p.slexer.next()
+		lval.token = p.newToken("{")
+		return PAREN_L
+	}
+	if c == '}' {
+		p.slexer.next()
+		lval.token = p.newToken("}")
+		return PAREN_R
+	}
 	if ('!' <= c && c <= '/') || (':' <= c && c <= '@') || ('[' <= c && c <= '`') || ('{' <= c && c <= '~') {
 		p.slexer.next()
 		lval.token = p.newToken(string(c))
@@ -133,7 +149,7 @@ func (p *Lexer) lexWord(lval *yySymType) int {
 	s := ""
 	for !p.slexer.isEOF() {
 		c := p.slexer.peek()
-		if ('a' <= c && c <= 'z') || 'A' <= c && c <= 'Z' || c == '_' || c == '.' {
+		if ('a' <= c && c <= 'z') || 'A' <= c && c <= 'Z' || c == '_' || c == '.' || ('0' <= c && c <= '9') {
 			s += string(c)
 			p.slexer.next()
 			continue
@@ -147,6 +163,12 @@ func (p *Lexer) lexWord(lval *yySymType) int {
 		return TIME
 	case "System.TimeSignature", "TimeSignature", "TimeSig":
 		return TIME_SIG
+	case "INT", "Int":
+		return INT
+	case "STR", "Str":
+		return STR
+	case "SUB", "Sub":
+		return SUB
 	}
 	return WORD
 }
