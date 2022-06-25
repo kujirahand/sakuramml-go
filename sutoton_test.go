@@ -1,15 +1,15 @@
-package sutoton
+package sakuramml
 
 import (
 	"testing"
 )
 
 func TestSutotonSort(t *testing.T) {
-	conv := NewConverter()
-	conv.AddSutoton("音符","l")
-	conv.AddSutoton("音階","o")
-	conv.AddSutoton("トラック","Track=")
-	conv.AddSutoton("トラ","TR=")
+	conv := NewSutotonConverter()
+	conv.AddSutoton("音符", "l")
+	conv.AddSutoton("音階", "o")
+	conv.AddSutoton("トラック", "Track=")
+	conv.AddSutoton("トラ", "TR=")
 	conv.Sort()
 
 	act, _ := conv.Convert("音符4 cde")
@@ -25,7 +25,7 @@ func TestSutotonSort(t *testing.T) {
 }
 
 func TestSutoton(t *testing.T) {
-	conv := NewConverter()
+	conv := NewSutotonConverter()
 
 	act1, _ := conv.Convert("~{音符}={l}~{トラック}={TR=}トラック2音符4 cde")
 	exp1 := "TR=2l4 cde"

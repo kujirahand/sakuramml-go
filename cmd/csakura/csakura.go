@@ -7,8 +7,7 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/kujirahand/sakuramml-go/compiler"
-	"github.com/kujirahand/sakuramml-go/midi"
+	"github.com/kujirahand/sakuramml-go"
 )
 
 func main() {
@@ -18,7 +17,7 @@ func main() {
 		return
 	}
 	// Check command line Options
-	opt := compiler.Options{}
+	opt := sakuramml.CompilerOptions{}
 	for i, arg := range args {
 		if i == 0 {
 			continue
@@ -83,12 +82,12 @@ func main() {
 		opt.Source = string(text)
 	}
 	// run
-	song, err := compiler.Compile(&opt)
+	song, err := sakuramml.Compile(&opt)
 	if err != nil {
 		log.Fatal(err)
 	}
 	// save to file
-	midi.SaveToFile(song, opt.Outfile)
+	sakuramml.MidiSaveToFile(song, opt.Outfile)
 	if opt.Debug {
 		fmt.Printf("SaveToFile=%s\n", opt.Outfile)
 	}
@@ -97,7 +96,7 @@ func main() {
 
 // ShowHeader func
 func ShowHeader() {
-	fmt.Println("♪ sakuramml-go " + compiler.VERSION)
+	fmt.Println("♪ sakuramml-go " + sakuramml.VERSION)
 }
 
 // ShowHelp func

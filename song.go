@@ -1,12 +1,8 @@
-package song
+package sakuramml
 
 import (
 	"fmt"
 	"strconv"
-
-	"github.com/kujirahand/sakuramml-go/track"
-	"github.com/kujirahand/sakuramml-go/utils"
-	"github.com/kujirahand/sakuramml-go/variable"
 )
 
 // LoopItem struct
@@ -27,9 +23,9 @@ type Song struct {
 	Tempo      int
 	TrackNo    int
 	Stack      []SValue
-	Tracks     []*track.Track
+	Tracks     []*Track
 	LoopStack  []*LoopItem
-	Variable   *variable.Variable
+	Variable   *Variable
 	Eval       EvalStrFunc
 	LastLineNo int
 	Index      int
@@ -41,16 +37,16 @@ func NewSong() *Song {
 	s := Song{}
 	s.Debug = false
 	s.Timebase = 96
-	s.Tracks = []*track.Track{}
+	s.Tracks = []*Track{}
 	// create default track
 	for i := 0; i < 16; i++ {
-		track := track.NewTrack(i, s.Timebase)
+		track := NewTrack(i, s.Timebase)
 		s.Tracks = append(s.Tracks, track)
 	}
 	s.Tempo = 120 // default Tempo (but not write)
 	s.TrackNo = 0
 	s.Stack = []SValue{}
-	s.Variable = variable.NewVariable()
+	s.Variable = NewVariable()
 	return &s
 }
 
@@ -73,7 +69,7 @@ func (song *Song) PushIValue(v int) {
 // PopIValue func
 func (song *Song) PopIValue() int {
 	v := song.PopStack()
-	return utils.ToInt(v)
+	return ToInt(v)
 }
 
 // PushValue func
@@ -89,7 +85,7 @@ func (song *Song) PushSValue(v string) {
 // PopSValue func
 func (song *Song) PopSValue() string {
 	v := song.PopStack()
-	return utils.ToStr(v)
+	return ToStr(v)
 }
 
 // PushLoop func
@@ -123,6 +119,12 @@ func (song *Song) TimePtrToStr(time int) string {
 	beat := ((time - meas*l1) / l4)
 	step := time % l4
 	return fmt.Sprintf("%3d:%2d:%3d", meas, beat+1, step)
+}
+
+func (song *Song) NToStep(n int) int {
+	tb := song.Timebase
+	step := tb / n
+	return step
 }
 
 // StepToN lの逆引き
@@ -163,9 +165,9 @@ func (song *Song) StepToN(length int) string {
 }
 
 // CurTrack func
-func (song *Song) CurTrack() *track.Track {
+func (song *Song) CurTrack() *Track {
 	for song.TrackNo >= len(song.Tracks) {
-		tr := track.NewTrack(song.TrackNo%16, song.Timebase)
+		tr := NewTrack(song.TrackNo%16, song.Timebase)
 		song.Tracks = append(song.Tracks, tr)
 	}
 	return song.Tracks[song.TrackNo]

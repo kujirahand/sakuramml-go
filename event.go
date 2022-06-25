@@ -1,4 +1,4 @@
-package event
+package sakuramml
 
 const (
 	// NoteOn Event

@@ -1,4 +1,4 @@
-package mmlparser
+package sakuramml
 
 import (
 	"fmt"

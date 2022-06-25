@@ -1,4 +1,4 @@
-package utils
+package sakuramml
 
 import (
 	"testing"
@@ -91,14 +91,14 @@ func TestStrGetRangeComment(t *testing.T) {
 }
 
 func TestStrCountKey(t *testing.T) {
-	act1 := CountKey("11*22*33*44*","*")
+	act1 := CountKey("11*22*33*44*", "*")
 	exp1 := 4
 	if act1 != exp1 {
 		t.Errorf("TestStrCountKey : %d != %d", act1, exp1)
 		return
 	}
 
-	act2 := CountKey("<>1111<>22222<>3333<>4444<>5555","<>")
+	act2 := CountKey("<>1111<>22222<>3333<>4444<>5555", "<>")
 	exp2 := 5
 	if act2 != exp2 {
 		t.Errorf("TestStrCountKey : %d != %d", act2, exp2)

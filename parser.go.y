@@ -1,5 +1,5 @@
 %{
-package mmlparser
+package sakuramml
 %}
 
 %union {
@@ -14,8 +14,7 @@ package mmlparser
 %type<str> toneFlags
 // トークンの定義
 %token<token> LF WORD NUMBER
-%token<token> 'c' 'd' 'e' 'f' 'g' 'a' 'b' '#' '+' '-' '*' '[' ']' ':'
-%token<token> 'l' 'v' 'q' 'o'
+%token<token> 'c' 'd' 'e' 'f' 'g' 'a' 'b' '#' '+' '-' '*' '[' ']' ':' 'l' 'v' 'q' 'o'
 %%
 
 // 文法規則を指定
@@ -29,16 +28,16 @@ block
 
 line
     : tone
-    | mmlCommand
     | loop
     | LF                { $$ = NewNode(NodeEOL) }
-
-
-mmlCommand
+/*
+    | mmlparam
+mmlparam
     : 'v' expr          { $$ = NewCommandNode($1, 'v', $2) }
     | 'l' expr          { $$ = NewCommandNode($1, 'l', $2) }
     | 'o' expr          { $$ = NewCommandNode($1, 'o', $2) }
     | 'q' expr          { $$ = NewCommandNode($1, 'q', $2) }
+*/
 
 expr
     : NUMBER            { $$ = NewNumberNode($1) }

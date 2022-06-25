@@ -1,9 +1,7 @@
-package track
+package sakuramml
 
 import (
 	"fmt"
-	"github.com/kujirahand/sakuramml-go/event"
-	"github.com/kujirahand/sakuramml-go/utils"
 	"sort"
 )
 
@@ -24,13 +22,13 @@ type Track struct {
 	Velocity  int
 	Time      int
 	PitchBend int
-	Events    []event.Event
+	Events    []Event
 }
 
 // NewTrack func
 func NewTrack(channel int, timebase int) *Track {
 	track := Track{}
-	track.Events = make([]event.Event, 0, 256) // Default Event
+	track.Events = make([]Event, 0, 256) // Default Event
 	track.Channel = channel
 	track.Length = timebase
 	track.Qgate = 80
@@ -42,23 +40,23 @@ func NewTrack(channel int, timebase int) *Track {
 }
 
 // AddEvent func
-func (track *Track) AddEvent(event event.Event) {
+func (track *Track) AddEvent(event Event) {
 	track.Events = append(track.Events, event)
 }
 
 // AddNoteOn add NoteOn event to track
-func (track *Track) AddNoteOn(time, note, vel, lenStep int) (*event.Event, *event.Event) {
-	eon := event.Event{
+func (track *Track) AddNoteOn(time, note, vel, lenStep int) (*Event, *Event) {
+	eon := Event{
 		Time:      time,
 		ByteCount: 3,
-		Type:      event.NoteOn | track.Channel,
+		Type:      NoteOn | track.Channel,
 		Data1:     note,
 		Data2:     vel,
 	}
-	eoff := event.Event{
+	eoff := Event{
 		Time:      time + lenStep,
 		ByteCount: 3,
-		Type:      event.NoteOff | track.Channel,
+		Type:      NoteOff | track.Channel,
 		Data1:     note,
 		Data2:     vel,
 	}
@@ -68,11 +66,11 @@ func (track *Track) AddNoteOn(time, note, vel, lenStep int) (*event.Event, *even
 }
 
 // AddCC Add Controll Change
-func (track *Track) AddCC(time, no, value int) *event.Event {
-	cc := event.Event{
+func (track *Track) AddCC(time, no, value int) *Event {
+	cc := Event{
 		Time:      time,
 		ByteCount: 3,
-		Type:      event.CC | track.Channel,
+		Type:      CC | track.Channel,
 		Data1:     no,
 		Data2:     value,
 	}
@@ -81,11 +79,11 @@ func (track *Track) AddCC(time, no, value int) *event.Event {
 }
 
 // AddProgramChange Add Controll Change
-func (track *Track) AddProgramChange(time, value int) *event.Event {
-	pc := event.Event{
+func (track *Track) AddProgramChange(time, value int) *Event {
+	pc := Event{
 		Time:      time,
 		ByteCount: 2,
-		Type:      event.ProgramChange | track.Channel,
+		Type:      ProgramChange | track.Channel,
 		Data1:     value,
 	}
 	track.AddEvent(pc)
@@ -93,17 +91,17 @@ func (track *Track) AddProgramChange(time, value int) *event.Event {
 }
 
 // AddPitchBend func ... p% command (%をつけると-8192~0~8191))
-func (track *Track) AddPitchBend(time, value int) *event.Event {
+func (track *Track) AddPitchBend(time, value int) *Event {
 	// calc msb, lsb
 	v := value + 8192
-	v = utils.InRange(0, v, 16383)
+	v = InRange(0, v, 16383)
 	msb := v >> 7 & 0x7f
 	lsb := v & 0x7f
 	// gen
-	pb := event.Event{
+	pb := Event{
 		Time:      time,
 		ByteCount: 3,
-		Type:      event.PitchBend | track.Channel,
+		Type:      PitchBend | track.Channel,
 		Data1:     lsb, // low byte <--- MIDI仕様からすると逆に思えるが lsb, msb の順が正しい
 		Data2:     msb, // high byte
 	}
@@ -112,17 +110,17 @@ func (track *Track) AddPitchBend(time, value int) *event.Event {
 }
 
 // AddPitchBendEasy func ... p command / 簡易ピッチベンドを書き込む(0~63~127の範囲)
-func (track *Track) AddPitchBendEasy(time, value int) *event.Event {
+func (track *Track) AddPitchBendEasy(time, value int) *Event {
 	v := value*128 - 8192
 	return track.AddPitchBend(time, v)
 }
 
 // AddTempo func
-func (track *Track) AddTempo(time, tempo int) *event.Event {
-	e := event.Event{
+func (track *Track) AddTempo(time, tempo int) *Event {
+	e := Event{
 		Time:      time,
 		ByteCount: 6,
-		Type:      event.Tempo,
+		Type:      Tempo,
 	}
 	mpq := uint32(60000000 / tempo)
 	e.ExData = []byte{
@@ -138,8 +136,8 @@ func (track *Track) AddTempo(time, tempo int) *event.Event {
 }
 
 // AddMeta func
-func (track *Track) AddMeta(time, metaType int, data []byte) *event.Event {
-	e := event.Event{
+func (track *Track) AddMeta(time, metaType int, data []byte) *Event {
+	e := Event{
 		Time:      time,
 		ByteCount: 3 + len(data),
 		Type:      0xFF00 | metaType,
@@ -168,6 +166,6 @@ func (track *Track) SortEvents() {
 // ToString convert to string
 func (track *Track) ToString() string {
 	s := fmt.Sprintf("|-channel=%d", track.Channel+1) + "\n"
-	s = s + fmt.Sprintf("|-event.length=%d", len(track.Events)) + "\n"
+	s = s + fmt.Sprintf("|-length=%d", len(track.Events)) + "\n"
 	return s
 }

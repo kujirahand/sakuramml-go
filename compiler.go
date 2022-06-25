@@ -1,11 +1,7 @@
-package compiler
+package sakuramml
 
 import (
 	"fmt"
-
-	"github.com/kujirahand/sakuramml-go/mmlparser"
-	"github.com/kujirahand/sakuramml-go/song"
-	"github.com/kujirahand/sakuramml-go/sutoton"
 )
 
 const (
@@ -13,8 +9,8 @@ const (
 	VERSION = "0.0.1"
 )
 
-// Options : Compiler Options
-type Options struct {
+// CompilerOptions : Compiler CompilerOptions
+type CompilerOptions struct {
 	Debug    bool
 	EvalMode bool
 	Infile   string
@@ -23,31 +19,31 @@ type Options struct {
 }
 
 // Eval func
-func Eval(song *song.Song, src string) error {
-	topNode, err := mmlparser.Parse(src)
+func Eval(song *Song, src string) error {
+	topNode, err := Parse(src)
 	if err != nil {
 		return err
 	}
 	// run
-	return Run(topNode, song)
+	return CompilerRun(topNode, song)
 }
 
 // Run func
-func Run(topNode *mmlparser.Node, song *song.Song) error {
+func CompilerRun(topNode *Node, song *Song) error {
 	return nil
 }
 
 // Compile MML
-func Compile(opt *Options) (*song.Song, error) {
+func Compile(opt *CompilerOptions) (*Song, error) {
 	// init
-	songObj := song.NewSong()
+	songObj := NewSong()
 	songObj.Debug = opt.Debug
 	songObj.Eval = Eval // Set Eval Func
 	// sutoton
 	if opt.Debug {
 		fmt.Println("--- sutoton ---")
 	}
-	src, err := sutoton.Convert(opt.Source)
+	src, err := SutotonConvert(opt.Source)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +51,7 @@ func Compile(opt *Options) (*song.Song, error) {
 	if opt.Debug {
 		fmt.Println("--- parse ---")
 	}
-	node, err := mmlparser.Parse(src)
+	node, err := Parse(src)
 	if err != nil {
 		return nil, err
 	}
@@ -63,6 +59,6 @@ func Compile(opt *Options) (*song.Song, error) {
 	if opt.Debug {
 		fmt.Println("--- exec ---")
 	}
-	mmlparser.Run(node, songObj)
+	Run(node, songObj)
 	return songObj, nil
 }

@@ -1,9 +1,7 @@
-package lexer
+package sakuramml
 
 import (
 	"log"
-	"github.com/kujirahand/sakuramml-go/token"
-	"github.com/kujirahand/sakuramml-go/utils"
 )
 
 // Lexer struct
@@ -12,7 +10,7 @@ type Lexer struct {
 	index  int
 	length int
 	line   int
-	tokens token.Tokens
+	tokens Tokens
 }
 
 // NewLexer func

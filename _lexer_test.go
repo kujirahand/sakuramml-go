@@ -1,14 +1,12 @@
-package lexer
+package sakuramml
 
 import (
 	"testing"
-
-	"github.com/kujirahand/sakuramml-go/token"
 )
 
 func lexExec(t *testing.T, code, expected string) {
 	tt, _ := Lex(code)
-	a := token.TokensToString(tt, " ")
+	a := TokensToString(tt, " ")
 	if a != expected {
 		t.Errorf("TestLex : %s != %s", a, expected)
 	}

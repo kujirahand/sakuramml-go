@@ -1,9 +1,7 @@
-package mmlparser
+package sakuramml
 
 import (
 	"fmt"
-
-	"github.com/kujirahand/sakuramml-go/song"
 )
 
 const (
@@ -13,8 +11,8 @@ const (
 	NodeList
 	// NodeTone : cdefgab
 	NodeTone
-  // NodeCommand : vloq
-  NodeCommand
+	// NodeCommand : vloq
+	NodeCommand
 	// NodeEOL : End of Line
 	NodeEOL
 	// NodeLoopBegin : NodeLoopBegin
@@ -31,7 +29,7 @@ var nodeTypeMap map[int]string = map[int]string{
 	Nop:           "Nop",
 	NodeList:      "NodeList",
 	NodeTone:      "NodeTone",
-  NodeCommand    "NodeCommand",
+	NodeCommand:   "NodeCommand",
 	NodeEOL:       "NodeEOL",
 	NodeLoopBegin: "NodeLoopBegin",
 	NodeLoopEnd:   "NodeLoopEnd",
@@ -40,7 +38,7 @@ var nodeTypeMap map[int]string = map[int]string{
 }
 
 // ExecFunc func
-type ExecFunc func(n *Node, s *song.Song) error
+type ExecFunc func(n *Node, s *Song) error
 
 // LineInfo : ソースコードの場所
 type LineInfo struct {
@@ -121,21 +119,21 @@ func (p *Node) ToString(level int) string {
 
 // CommandData: Data
 type CommandData struct {
-	Name rune
-  Value: NodeNumber
+	Name  rune
+	Value *Node
 }
 
 func (p CommandData) toString() string {
-	return string(p.Name) + string(p.Vakue)
+	return string(p.Name) + p.Value.ToString(0)
 }
 
 // NewToneNode : tone node
-func NewCommandNode(tok Token, name rune, val NodeValue) *Node {
-  data := CommandData { Name: name, Value: val }
-  node := NewNode(CommandNode)
-  node.Data = data
-  node.Exec = runCommand
-  return &node
+func NewCommandNode(tok Token, name rune, val *Node) *Node {
+	data := CommandData{Name: name, Value: val}
+	node := NewNode(NodeCommand)
+	node.Data = data
+	node.Exec = runCommand
+	return node
 }
 
 // CurLine : 現在パース中のライン情報

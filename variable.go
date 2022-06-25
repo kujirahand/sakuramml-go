@@ -1,26 +1,27 @@
-package variable
+package sakuramml
 
 import "strconv"
 
 // Variable type
 type VType = int
+
 const (
-	VTypeNone VType = 0
-	VTypeInt = 1
-	VTypeStr = 2
-	VTypeArray = 3
+	VTypeNone  VType = 0
+	VTypeInt         = 1
+	VTypeStr         = 2
+	VTypeArray       = 3
 )
 
 // Value struct
 type Value struct {
-	Type	VType
+	Type   VType
 	SValue string
 	IValue int
 	AValue []*Value
 }
 
 // NewValue func
-func NewValue () *Value {
+func NewValue() *Value {
 	v := Value{Type: VTypeNone}
 	return &v
 }
@@ -49,24 +50,24 @@ func NewVaueArray() *Value {
 	return v
 }
 
-func (v *Value)ToInt() int {
+func (v *Value) ToInt() int {
 	return v.IValue
 }
 
-func (v *Value)ToString() string {
+func (v *Value) ToString() string {
 	if v.Type == VTypeInt {
 		return strconv.Itoa(v.IValue)
 	}
 	return v.SValue
 }
 
-func (v *Value)AddValue(cv *Value) {
+func (v *Value) AddValue(cv *Value) {
 	v.AValue = append(v.AValue, cv)
 }
 
 // Variable struct
 type Variable struct {
-	values map[string] *Value
+	values map[string]*Value
 }
 
 func NewVariable() *Variable {

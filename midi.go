@@ -1,4 +1,4 @@
-package midi
+package sakuramml
 
 import (
 	// "fmt"
@@ -7,8 +7,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"github.com/kujirahand/sakuramml-go/song"
-	"github.com/kujirahand/sakuramml-go/track"
 )
 
 // GetUint16 make 2 bytes BigEndian data
@@ -26,7 +24,7 @@ func GetUint32(v int) []byte {
 }
 
 // Save song to midi stream
-func Save(s *song.Song, w io.Writer) {
+func MidiSave(s *Song, w io.Writer) {
 	midiformat := 1
 
 	// count track count
@@ -60,16 +58,16 @@ func Save(s *song.Song, w io.Writer) {
 }
 
 // SaveToFile : song save to midi file
-func SaveToFile(sng *song.Song, outfile string) {
+func MidiSaveToFile(sng *Song, outfile string) {
 	f, err := os.Create(outfile)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer f.Close()
-	Save(sng, f)
+	MidiSave(sng, f)
 }
 
-func getTrackData(track *track.Track) []byte {
+func getTrackData(track *Track) []byte {
 	buf := new(bytes.Buffer)
 	track.SortEvents()
 	events := track.Events

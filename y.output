@@ -1,0 +1,235 @@
+
+0: shift/reduce conflict (shift 6(0), red'n 2(0)) on LF
+0: shift/reduce conflict (shift 11(0), red'n 2(0)) on 'c'
+0: shift/reduce conflict (shift 12(0), red'n 2(0)) on 'd'
+0: shift/reduce conflict (shift 13(0), red'n 2(0)) on 'e'
+0: shift/reduce conflict (shift 14(0), red'n 2(0)) on 'f'
+0: shift/reduce conflict (shift 15(0), red'n 2(0)) on 'g'
+0: shift/reduce conflict (shift 16(0), red'n 2(0)) on 'a'
+0: shift/reduce conflict (shift 17(0), red'n 2(0)) on 'b'
+0: shift/reduce conflict (shift 8(0), red'n 2(0)) on '['
+0: shift/reduce conflict (shift 9(0), red'n 2(0)) on ']'
+0: shift/reduce conflict (shift 10(0), red'n 2(0)) on ':'
+state 0
+	$accept: .program $end 
+	block: .    (2)
+
+	LF  shift 6
+	'c'  shift 11
+	'd'  shift 12
+	'e'  shift 13
+	'f'  shift 14
+	'g'  shift 15
+	'a'  shift 16
+	'b'  shift 17
+	'['  shift 8
+	']'  shift 9
+	':'  shift 10
+	.  reduce 2 (src line 24)
+
+	program  goto 1
+	block  goto 2
+	line  goto 3
+	tone  goto 4
+	loop  goto 5
+	toneName  goto 7
+
+state 1
+	$accept:  program.$end 
+
+	$end  accept
+	.  error
+
+
+state 2
+	program:  block.    (1)
+	block:  block.line 
+
+	LF  shift 6
+	'c'  shift 11
+	'd'  shift 12
+	'e'  shift 13
+	'f'  shift 14
+	'g'  shift 15
+	'a'  shift 16
+	'b'  shift 17
+	'['  shift 8
+	']'  shift 9
+	':'  shift 10
+	.  reduce 1 (src line 21)
+
+	line  goto 18
+	tone  goto 4
+	loop  goto 5
+	toneName  goto 7
+
+state 3
+	block:  line.    (3)
+
+	.  reduce 3 (src line 26)
+
+
+state 4
+	line:  tone.    (5)
+
+	.  reduce 5 (src line 29)
+
+
+state 5
+	line:  loop.    (6)
+
+	.  reduce 6 (src line 31)
+
+
+state 6
+	line:  LF.    (7)
+
+	.  reduce 7 (src line 32)
+
+
+state 7
+	tone:  toneName.toneFlags 
+	tone:  toneName.    (14)
+
+	'#'  shift 21
+	'+'  shift 22
+	'-'  shift 23
+	.  reduce 14 (src line 53)
+
+	toneFlag  goto 20
+	toneFlags  goto 19
+
+state 8
+	loop:  '['.expr 
+	loop:  '['.    (10)
+
+	NUMBER  shift 25
+	.  reduce 10 (src line 47)
+
+	expr  goto 24
+
+state 9
+	loop:  ']'.    (11)
+
+	.  reduce 11 (src line 48)
+
+
+state 10
+	loop:  ':'.    (12)
+
+	.  reduce 12 (src line 49)
+
+
+state 11
+	toneName:  'c'.    (15)
+
+	.  reduce 15 (src line 55)
+
+
+state 12
+	toneName:  'd'.    (16)
+
+	.  reduce 16 (src line 56)
+
+
+state 13
+	toneName:  'e'.    (17)
+
+	.  reduce 17 (src line 56)
+
+
+state 14
+	toneName:  'f'.    (18)
+
+	.  reduce 18 (src line 56)
+
+
+state 15
+	toneName:  'g'.    (19)
+
+	.  reduce 19 (src line 56)
+
+
+state 16
+	toneName:  'a'.    (20)
+
+	.  reduce 20 (src line 56)
+
+
+state 17
+	toneName:  'b'.    (21)
+
+	.  reduce 21 (src line 56)
+
+
+state 18
+	block:  block line.    (4)
+
+	.  reduce 4 (src line 27)
+
+
+state 19
+	tone:  toneName toneFlags.    (13)
+	toneFlags:  toneFlags.toneFlag 
+
+	'#'  shift 21
+	'+'  shift 22
+	'-'  shift 23
+	.  reduce 13 (src line 51)
+
+	toneFlag  goto 26
+
+state 20
+	toneFlags:  toneFlag.    (22)
+
+	.  reduce 22 (src line 58)
+
+
+state 21
+	toneFlag:  '#'.    (24)
+
+	.  reduce 24 (src line 62)
+
+
+state 22
+	toneFlag:  '+'.    (25)
+
+	.  reduce 25 (src line 63)
+
+
+state 23
+	toneFlag:  '-'.    (26)
+
+	.  reduce 26 (src line 63)
+
+
+state 24
+	loop:  '[' expr.    (9)
+
+	.  reduce 9 (src line 45)
+
+
+state 25
+	expr:  NUMBER.    (8)
+
+	.  reduce 8 (src line 42)
+
+
+state 26
+	toneFlags:  toneFlags toneFlag.    (23)
+
+	.  reduce 23 (src line 60)
+
+
+24 terminals, 10 nonterminals
+27 grammar rules, 27/16000 states
+11 shift/reduce, 0 reduce/reduce conflicts reported
+59 working sets used
+memory: parser 13/240000
+0 extra closures
+29 shift entries, 1 exceptions
+11 goto entries
+3 entries saved by goto default
+Optimizer space used: output 26/240000
+26 table entries, 0 zero
+maximum spread: 20, maximum offset: 19
