@@ -23,6 +23,8 @@ const (
 	NodeLoopBreak
 	// NodeNumber : number
 	NodeNumber
+	// NodeTime : Time
+	NodeTime
 )
 
 var nodeTypeMap map[int]string = map[int]string{
@@ -35,6 +37,7 @@ var nodeTypeMap map[int]string = map[int]string{
 	NodeLoopEnd:   "NodeLoopEnd",
 	NodeLoopBreak: "NodeLoopBreak",
 	NodeNumber:    "NodeNumber",
+	NodeTime:      "NodeTime",
 }
 
 // ExecFunc func
@@ -121,7 +124,7 @@ func (p *Node) ToString(level int) string {
 
 // CommandData: Data
 type CommandData struct {
-	Name  rune
+	Name  string
 	Value *Node
 }
 
@@ -130,7 +133,10 @@ func (p CommandData) toString() string {
 }
 
 // NewToneNode : tone node
-func NewCommandNode(tok Token, name rune, val *Node) *Node {
+func NewCommandNode(tok Token, name string, val *Node) *Node {
+	if name == "WORD" {
+		name = tok.label
+	}
 	data := CommandData{Name: name, Value: val}
 	node := NewNode(NodeCommand)
 	node.Data = data
@@ -199,4 +205,29 @@ func NewLoopNodeBreak(t Token) *Node {
 func AppendChildNode(parent *Node, child *Node) *Node {
 	parent.Children = append(parent.Children, child)
 	return parent
+}
+
+// TimeData : TimeData
+type TimeData struct {
+	mode string
+	v1   *Node
+	v2   *Node
+	v3   *Node
+}
+
+func (p TimeData) toString() string {
+	return p.mode + "(?:?:?)"
+}
+
+// NewToneNode : tone node
+func NewTimeNode(tok Token, v1 *Node, v2 *Node, v3 *Node) *Node {
+	node := NewNode(NodeTime)
+	node.Data = TimeData{
+		mode: "timecode",
+		v1:   v1,
+		v2:   v2,
+		v3:   v3,
+	}
+	node.Exec = runTime
+	return node
 }

@@ -68,13 +68,14 @@ func noteToNo(n rune) int {
 }
 
 func runTone(node *Node, song *Song) error {
-	toneData := node.Data.(ToneData)
-	println("runTone=", toneData.Name, toneData.Flag)
 	trk := song.CurTrack()
+	toneData := node.Data.(ToneData)
+	fmt.Printf("runTone: TR=%d %c%s\n", song.TrackNo, toneData.Name, toneData.Flag)
 	// calc note
 	nn := trk.Octave*12 + noteToNo(toneData.Name)
 	switch toneData.Flag {
 	case "+":
+	case "#":
 		nn += 1
 	case "-":
 		nn -= 1
@@ -96,21 +97,30 @@ func runCommand(node *Node, song *Song) error {
 	var v SValue
 	trk := song.CurTrack()
 	data := node.Data.(CommandData)
+	// Get Command Value
 	err := data.Value.Exec(data.Value, song)
 	if err == nil {
 		v = song.PopSValue()
 	}
-	switch data.Name {
-	case 'v':
+
+	switch string(data.Name) {
+	case "v":
 		trk.Velocity = v.ToInt()
-	case 'l':
+	case "l":
 		trk.Length = song.StrToStep(v.ToStr())
-	case 'q':
+	case "q":
 		trk.Qgate = v.ToInt()
-	case 'o':
+	case "o":
 		trk.Octave = v.ToInt()
+	case "VOICE", "Voice", "@":
+		trk.AddProgramChange(trk.Time, v.ToInt())
+	case "TR", "Track", "TRACK":
+		fmt.Printf("@@@TR=%d\n", v.ToInt())
+		song.TrackNo = v.ToInt()
+	case "CH", "Channel", "CHANNEL":
+		song.CurTrack().Channel = InRange(1, v.ToInt(), 16) - 1
 	}
-	println("runCommand=", string(data.Name), v)
+	println("@@@runCommand=", string(data.Name), v.ToStr())
 	return nil
 }
 
@@ -147,5 +157,21 @@ func runLoopBreak(node *Node, so *Song) error {
 		so.PopLoop()
 		so.JumpTo = it.End
 	}
+	return nil
+}
+
+func runTime(node *Node, song *Song) error {
+	timeData := node.Data.(TimeData)
+	timeData.v1.Exec(timeData.v1, song)
+	timeData.v2.Exec(timeData.v2, song)
+	timeData.v3.Exec(timeData.v3, song)
+	v3 := song.PopIValue()
+	v2 := song.PopIValue()
+	v1 := song.PopIValue()
+	total := (v1 - 1) * (4 * song.Timebase)
+	total += (v2 - 1) * song.Timebase
+	total += v3
+	fmt.Printf("Time=%d (%d:%d:%d)\n", total, v1, v2, v3)
+	song.CurTrack().Time = total
 	return nil
 }

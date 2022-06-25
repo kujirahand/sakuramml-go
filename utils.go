@@ -156,6 +156,7 @@ func ToInt(v interface{}) int {
 	case int:
 		result = v
 	case float64:
+		result = int(v)
 	case SNumber:
 		result = int(v)
 	}
@@ -171,6 +172,7 @@ func ToStr(v interface{}) string {
 	case int:
 		result = strconv.Itoa(v)
 	case SNumber:
+		result = strconv.FormatFloat(float64(v), 'f', -1, 64)
 	case float64:
 		result = strconv.FormatFloat(float64(v), 'f', -1, 64)
 	}

@@ -41,6 +41,14 @@ func TestStrToStep(t *testing.T) {
 	if l4dot != 96*1.5 {
 		t.Errorf("StrToStep failed timebase=96 l4. !=%d", l4dot)
 	}
+	lp48 := song.StrToStep("%48")
+	if lp48 != 48 {
+		t.Errorf("StrToStep failed timebase=96 l%%48 !=%d", lp48)
+	}
+	lp96 := song.StrToStep("%48^%48")
+	if lp96 != 96 {
+		t.Errorf("StrToStep failed timebase=96 l%%96 !=%d", lp96)
+	}
 }
 
 /*

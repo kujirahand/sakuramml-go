@@ -36,6 +36,7 @@ func NewTrack(channel int, timebase int) *Track {
 	track.Velocity = 100
 	track.Octave = 5
 	track.PitchBend = 0
+	track.Time = 0
 	return &track
 }
 

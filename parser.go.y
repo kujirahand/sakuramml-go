@@ -13,8 +13,10 @@ package sakuramml
 %type<token> toneName toneFlag
 %type<str> toneFlags
 // トークンの定義
-%token<token> LF WORD NUMBER
-%token<token> 'c' 'd' 'e' 'f' 'g' 'a' 'b' '#' '+' '-' '*' '[' ']' ':' 'l' 'v' 'q' 'o' ','
+%token<token> LF WORD NUMBER TIME
+%token<token> 'c' 'd' 'e' 'f' 'g' 'a' 'b' '#' '+' '-' '*' 
+%token<token> '[' ']' ':' 'l' 'v' 'q' 'o' ',' '(' ')'
+%token<token> '@'
 %%
 
 // 文法規則を指定
@@ -30,10 +32,14 @@ line
     : tone
     | loop
     | LF                { $$ = NewNode(NodeEOL) }
-    | 'l' expr          { $$ = NewCommandNode($1, 'l', $2) }
-    | 'v' expr          { $$ = NewCommandNode($1, 'v', $2) }
-    | 'o' expr          { $$ = NewCommandNode($1, 'o', $2) }
-    | 'q' expr          { $$ = NewCommandNode($1, 'q', $2) }
+    | 'l' expr          { $$ = NewCommandNode($1, "l", $2) }
+    | 'v' expr          { $$ = NewCommandNode($1, "v", $2) }
+    | 'o' expr          { $$ = NewCommandNode($1, "o", $2) }
+    | 'q' expr          { $$ = NewCommandNode($1, "q", $2) }
+    | '@' expr          { $$ = NewCommandNode($1, "@", $2) }
+    | WORD '=' expr     { $$ = NewCommandNode($1, "WORD", $3) }
+    | TIME '(' expr ':' expr ':' expr ')'   { $$ = NewTimeNode($1, $3, $5, $7) }
+    | TIME '=' expr ':' expr ':' expr       { $$ = NewTimeNode($1, $3, $5, $7) }
 
 expr
     : NUMBER            { $$ = NewNumberNode($1) }

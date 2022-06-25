@@ -19,25 +19,33 @@ var tokenName = map[int]string{
 }
 
 type Lexer struct {
-	slexer SLexer
-	result *Node
+	slexer     SLexer
+	result     *Node
+	parseError error
+	lastToken  *Token
 }
 
 // Parse : コードを実行
 func Parse(code string, fileno int) (*Node, error) {
 	lexer := Lexer{
-		slexer: *newSLexer(code+"\n", fileno),
-		result: nil,
+		slexer:     *newSLexer(code+"\n", fileno),
+		result:     nil,
+		lastToken:  nil,
+		parseError: nil,
 	}
 	yyDebug = 1
 	yyErrorVerbose = true
 	yyParse(&lexer)
+	if lexer.parseError != nil {
+		return nil, lexer.parseError
+	}
 	return lexer.result, nil
 }
 
 // Lex : トークンを一つずつ返す
 func (p *Lexer) Lex(lval *yySymType) int {
 	tok := p.getToken(lval)
+	p.lastToken = &lval.token
 	fmt.Printf("[%s]", getTokenName(tok))
 	return tok
 }
@@ -71,7 +79,7 @@ func (p *Lexer) getToken(lval *yySymType) int {
 		return LF
 	}
 	// NUMBER ?
-	if isDigit(c) {
+	if isDigit(c) || c == '^' || c == '%' {
 		return p.lexNumber(lval)
 	}
 	// 演算子 ?
@@ -90,6 +98,12 @@ func (p *Lexer) getToken(lval *yySymType) int {
 	if 'A' <= c && c <= 'Z' || c == '_' {
 		return p.lexWord(lval)
 	}
+	// 記号
+	if ('!' <= c && c <= '/') || (':' <= c && c <= '@') || ('[' <= c && c <= '`') || ('{' <= c && c <= '~') {
+		p.slexer.next()
+		lval.token = p.newToken(string(c))
+		return int(c)
+	}
 	return -1
 }
 
@@ -97,7 +111,7 @@ func (p *Lexer) lexNumber(lval *yySymType) int {
 	s := ""
 	for !p.slexer.isEOF() {
 		c := p.slexer.peek()
-		if isDigit(c) || c == '.' || c == '^' {
+		if isDigit(c) || c == '.' || c == '^' || c == '%' {
 			s += string(c)
 			p.slexer.next()
 			continue
@@ -121,7 +135,12 @@ func (p *Lexer) lexWord(lval *yySymType) int {
 		}
 		break
 	}
+	// Reserved Words
 	lval.token = p.newToken(s)
+	switch s {
+	case "TIME", "Time":
+		return TIME
+	}
 	return WORD
 }
 
@@ -148,5 +167,11 @@ func (p *Lexer) newToken(label string) Token {
 
 // エラー報告用
 func (p *Lexer) Error(e string) {
-	fmt.Println("[error] " + e)
+	tok := ""
+	if p.lastToken != nil {
+		tok = p.lastToken.label
+	}
+	msg := fmt.Sprintf("[ERROR] (%d) [%s] %s", CurLine.LineNo, tok, e)
+	err := fmt.Errorf(msg)
+	p.parseError = err
 }

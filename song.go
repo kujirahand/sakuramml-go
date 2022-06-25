@@ -63,8 +63,9 @@ func (song *Song) PopStack() interface{} {
 
 // PopIValue func
 func (song *Song) PopIValue() int {
-	v := song.PopStack()
-	return ToInt(v)
+	iv := song.PopStack()
+	sv := iv.(SValue)
+	return sv.ToInt()
 }
 
 // PopSValue func
@@ -131,7 +132,11 @@ func (song *Song) StrToStep(s string) int {
 	sl := newSLexer(s, 0)
 	for !sl.isEOF() {
 		num := defLen
-		if isDigit(sl.peek()) {
+		c := sl.peek()
+		if c == '%' {
+			sl.next() // skip %
+			num = sl.readInt(defLen)
+		} else if isDigit(c) {
 			n := sl.readInt(0)
 			num = song.NToStep(n)
 			countDot := 0
