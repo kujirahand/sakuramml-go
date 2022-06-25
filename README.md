@@ -5,20 +5,7 @@ mml compiler (text music) sakura by golang
 
 ## サクラのコンパイル
 
-サクラを動かすには、golang / goyacc が必要。
-
-```
-brew install golang
-```
-
-環境変数GOPATHを確認してgithub.com/kujirhand/sakuramml-goにリポジトリをクローン。
-
-```
-cd `go env GOPATH`
-pwd
-mkdir -p src/github.com/kujirahand
-cd src/github.com/kujirahand
-```
+サクラを動かすには、golang が必要です。
 
 リポジトリをクローン
 
@@ -27,7 +14,7 @@ git clone https://github.com/kujirahand/sakuramml-go.git
 # あるいは ... git clone git@github.com:kujirahand/sakuramml-go.git
 ```
 
-goyaccをインストール
+文法を改変したい場合は、goyaccをインストール
 
 ```
 go get golang.org/x/tools/cmd/goyacc
@@ -38,7 +25,7 @@ go install golang.org/x/tools/cmd/goyacc
 
 ```
 cd sakuramml-go
-go build csakura.go
+go build cmd/csakura/csakura.go
 ```
 
 すると、csakuraというバイナリができる。ドレミのテキストで作曲して、MIDIファイルにコンパイルする。
@@ -47,19 +34,15 @@ go build csakura.go
 ./csakura a.mml
 ```
 
+# なお完全に作成途中です
 
-## Setup
+現在、基本的なMMLコマンド、およびストトン表記のものを変換できます。
 
-```
-$ go get github.com/kujirahand/sakuramml-go
-$ go install github.com/kujirahand/sakuramml-go
-```
-
-# なお完全に作成途中
+# 完成度
 
 - https://github.com/kujirahand/sakuramml-go/ (30%)
 - https://github.com/kujirahand/sakuramml-c/ (40%)
 - https://github.com/kujirahand/sakuramml-js/ (1%)
-- https://github.com/kujirahand/sakuramml/ (100% --- Pascal)
+- https://github.com/kujirahand/sakuramml/ (100% --- 本家v2版 Pascal)
 
 
