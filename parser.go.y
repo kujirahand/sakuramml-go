@@ -13,7 +13,7 @@ package sakuramml
 %type<token> toneName toneFlag
 %type<str> toneFlags
 // トークンの定義
-%token<token> LF WORD NUMBER TIME
+%token<token> LF WORD NUMBER TIME TIME_SIG
 %token<token> 'c' 'd' 'e' 'f' 'g' 'a' 'b' '#' '+' '-' '*' 
 %token<token> '[' ']' ':' 'l' 'v' 'q' 'o' ',' '(' ')'
 %token<token> '@'
@@ -40,6 +40,7 @@ line
     | WORD '=' expr     { $$ = NewCommandNode($1, "WORD", $3) }
     | TIME '(' expr ':' expr ':' expr ')'   { $$ = NewTimeNode($1, $3, $5, $7) }
     | TIME '=' expr ':' expr ':' expr       { $$ = NewTimeNode($1, $3, $5, $7) }
+    | TIME_SIG '=' expr ',' expr            { $$ = NewTimeSigNode($1, $3, $5) }
 
 expr
     : NUMBER            { $$ = NewNumberNode($1) }

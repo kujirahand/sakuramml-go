@@ -25,6 +25,8 @@ const (
 	NodeNumber
 	// NodeTime : Time
 	NodeTime
+	// NodeTimeSig : TimeSignature
+	NodeTimeSig
 )
 
 var nodeTypeMap map[int]string = map[int]string{
@@ -38,6 +40,7 @@ var nodeTypeMap map[int]string = map[int]string{
 	NodeLoopBreak: "NodeLoopBreak",
 	NodeNumber:    "NodeNumber",
 	NodeTime:      "NodeTime",
+	NodeTimeSig:   "NodeTimeSig",
 }
 
 // ExecFunc func
@@ -223,11 +226,24 @@ func (p TimeData) toString() string {
 func NewTimeNode(tok Token, v1 *Node, v2 *Node, v3 *Node) *Node {
 	node := NewNode(NodeTime)
 	node.Data = TimeData{
-		mode: "timecode",
+		mode: "Time",
 		v1:   v1,
 		v2:   v2,
 		v3:   v3,
 	}
 	node.Exec = runTime
+	return node
+}
+
+// NewToneNode : tone node
+func NewTimeSigNode(tok Token, v1 *Node, v2 *Node) *Node {
+	node := NewNode(NodeTimeSig)
+	node.Data = TimeData{
+		mode: "TimeSig",
+		v1:   v1,
+		v2:   v2,
+		v3:   nil,
+	}
+	node.Exec = runTimeSig
 	return node
 }

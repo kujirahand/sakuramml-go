@@ -128,7 +128,7 @@ func (p *Lexer) lexWord(lval *yySymType) int {
 	s := ""
 	for !p.slexer.isEOF() {
 		c := p.slexer.peek()
-		if ('a' <= c && c <= 'z') || 'A' <= c && c <= 'Z' || c == '_' {
+		if ('a' <= c && c <= 'z') || 'A' <= c && c <= 'Z' || c == '_' || c == '.' {
 			s += string(c)
 			p.slexer.next()
 			continue
@@ -140,6 +140,8 @@ func (p *Lexer) lexWord(lval *yySymType) int {
 	switch s {
 	case "TIME", "Time":
 		return TIME
+	case "System.TimeSignature", "TimeSignature", "TimeSig":
+		return TIME_SIG
 	}
 	return WORD
 }

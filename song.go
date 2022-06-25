@@ -18,18 +18,20 @@ type EvalStrFunc func(song *Song, src string) error
 
 // Song is info of song, include tracks
 type Song struct {
-	Debug      bool
-	Timebase   int
-	Tempo      int
-	TrackNo    int
-	Stack      []SValue
-	Tracks     []*Track
-	LoopStack  []*LoopItem
-	Variable   *Variable
-	Eval       EvalStrFunc
-	LastLineNo int
-	Index      int
-	JumpTo     int
+	Debug       bool
+	Timebase    int
+	TimeSigFrac int // 分子
+	TimeSigDeno int // 分母
+	Tempo       int
+	TrackNo     int
+	Stack       []SValue
+	Tracks      []*Track
+	LoopStack   []*LoopItem
+	Variable    *Variable
+	Eval        EvalStrFunc
+	LastLineNo  int
+	Index       int
+	JumpTo      int
 }
 
 // NewSong func
@@ -37,6 +39,8 @@ func NewSong() *Song {
 	s := Song{}
 	s.Debug = false
 	s.Timebase = 96
+	s.TimeSigDeno = 4 //
+	s.TimeSigFrac = 4 //
 	s.Tracks = []*Track{}
 	// create default track
 	for i := 0; i < 16; i++ {

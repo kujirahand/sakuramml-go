@@ -161,17 +161,31 @@ func runLoopBreak(node *Node, so *Song) error {
 }
 
 func runTime(node *Node, song *Song) error {
+	// Calc Time (SakuraObj_time2step)
+	// (ref) https://github.com/kujirahand/sakuramml-c/blob/68b62cbc101669211c511258ae1cf830616f238e/src/k_main.c#L473
 	timeData := node.Data.(TimeData)
 	timeData.v1.Exec(timeData.v1, song)
 	timeData.v2.Exec(timeData.v2, song)
 	timeData.v3.Exec(timeData.v3, song)
-	v3 := song.PopIValue()
+	tick := song.PopIValue()
+	beat := song.PopIValue()
+	mes := song.PopIValue()
+	//
+	base := song.Timebase * 4 / song.TimeSigDeno
+	total := (mes-1)*(base*song.TimeSigFrac) + (beat-1)*base + tick
+	// fmt.Printf("Time=%d (%d:%d:%d)\n", total, mes, beat, tick)
+	song.CurTrack().Time = total
+	return nil
+}
+
+func runTimeSig(node *Node, song *Song) error {
+	timeData := node.Data.(TimeData)
+	timeData.v1.Exec(timeData.v1, song)
+	timeData.v2.Exec(timeData.v2, song)
 	v2 := song.PopIValue()
 	v1 := song.PopIValue()
-	total := (v1 - 1) * (4 * song.Timebase)
-	total += (v2 - 1) * song.Timebase
-	total += v3
-	fmt.Printf("Time=%d (%d:%d:%d)\n", total, v1, v2, v3)
-	song.CurTrack().Time = total
+	fmt.Printf("TimeSig=%d,%d\n", v1, v2)
+	song.TimeSigFrac = v1
+	song.TimeSigDeno = v2
 	return nil
 }
