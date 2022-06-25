@@ -10,6 +10,7 @@
 0: shift/reduce conflict (shift 23(0), red'n 2(0)) on 'g'
 0: shift/reduce conflict (shift 24(0), red'n 2(0)) on 'a'
 0: shift/reduce conflict (shift 25(0), red'n 2(0)) on 'b'
+0: shift/reduce conflict (shift 26(0), red'n 2(0)) on 'r'
 0: shift/reduce conflict (shift 16(0), red'n 2(0)) on '['
 0: shift/reduce conflict (shift 17(0), red'n 2(0)) on ']'
 0: shift/reduce conflict (shift 18(0), red'n 2(0)) on ':'
@@ -33,6 +34,7 @@ state 0
 	'g'  shift 23
 	'a'  shift 24
 	'b'  shift 25
+	'r'  shift 26
 	'['  shift 16
 	']'  shift 17
 	':'  shift 18
@@ -72,6 +74,7 @@ state 2
 	'g'  shift 23
 	'a'  shift 24
 	'b'  shift 25
+	'r'  shift 26
 	'['  shift 16
 	']'  shift 17
 	':'  shift 18
@@ -82,7 +85,7 @@ state 2
 	'@'  shift 11
 	.  reduce 1 (src line 23)
 
-	line  goto 26
+	line  goto 27
 	tone  goto 4
 	loop  goto 5
 	toneName  goto 15
@@ -114,47 +117,47 @@ state 6
 state 7
 	line:  'l'.expr 
 
-	NUMBER  shift 28
+	NUMBER  shift 29
 	.  error
 
-	expr  goto 27
+	expr  goto 28
 
 state 8
 	line:  'v'.expr 
 
-	NUMBER  shift 28
-	.  error
-
-	expr  goto 29
-
-state 9
-	line:  'o'.expr 
-
-	NUMBER  shift 28
+	NUMBER  shift 29
 	.  error
 
 	expr  goto 30
 
-state 10
-	line:  'q'.expr 
+state 9
+	line:  'o'.expr 
 
-	NUMBER  shift 28
+	NUMBER  shift 29
 	.  error
 
 	expr  goto 31
 
-state 11
-	line:  '@'.expr 
+state 10
+	line:  'q'.expr 
 
-	NUMBER  shift 28
+	NUMBER  shift 29
 	.  error
 
 	expr  goto 32
 
+state 11
+	line:  '@'.expr 
+
+	NUMBER  shift 29
+	.  error
+
+	expr  goto 33
+
 state 12
 	line:  WORD.'=' expr 
 
-	'='  shift 33
+	'='  shift 34
 	.  error
 
 
@@ -162,15 +165,15 @@ state 13
 	line:  TIME.'(' expr ':' expr ':' expr ')' 
 	line:  TIME.'=' expr ':' expr ':' expr 
 
-	'('  shift 34
-	'='  shift 35
+	'('  shift 35
+	'='  shift 36
 	.  error
 
 
 state 14
 	line:  TIME_SIG.'=' expr ',' expr 
 
-	'='  shift 36
+	'='  shift 37
 	.  error
 
 
@@ -180,24 +183,24 @@ state 15
 	tone:  toneName.toneFlags 
 	tone:  toneName.    (25)
 
-	NUMBER  shift 28
-	'#'  shift 40
-	'+'  shift 41
-	'-'  shift 42
+	NUMBER  shift 29
+	'#'  shift 41
+	'+'  shift 42
+	'-'  shift 43
 	.  reduce 25 (src line 58)
 
-	expr  goto 37
-	toneFlag  goto 39
-	toneFlags  goto 38
+	expr  goto 38
+	toneFlag  goto 40
+	toneFlags  goto 39
 
 state 16
 	loop:  '['.expr 
 	loop:  '['.    (19)
 
-	NUMBER  shift 28
+	NUMBER  shift 29
 	.  reduce 19 (src line 50)
 
-	expr  goto 43
+	expr  goto 44
 
 state 17
 	loop:  ']'.    (20)
@@ -254,256 +257,262 @@ state 25
 
 
 state 26
+	toneName:  'r'.    (33)
+
+	.  reduce 33 (src line 61)
+
+
+state 27
 	block:  block line.    (4)
 
 	.  reduce 4 (src line 29)
 
 
-state 27
+state 28
 	line:  'l' expr.    (8)
 
 	.  reduce 8 (src line 35)
 
 
-state 28
+state 29
 	expr:  NUMBER.    (17)
 
 	.  reduce 17 (src line 45)
 
 
-state 29
+state 30
 	line:  'v' expr.    (9)
 
 	.  reduce 9 (src line 36)
 
 
-state 30
+state 31
 	line:  'o' expr.    (10)
 
 	.  reduce 10 (src line 37)
 
 
-state 31
+state 32
 	line:  'q' expr.    (11)
 
 	.  reduce 11 (src line 38)
 
 
-state 32
+state 33
 	line:  '@' expr.    (12)
 
 	.  reduce 12 (src line 39)
 
 
-state 33
+state 34
 	line:  WORD '='.expr 
 
-	NUMBER  shift 28
-	.  error
-
-	expr  goto 44
-
-state 34
-	line:  TIME '('.expr ':' expr ':' expr ')' 
-
-	NUMBER  shift 28
+	NUMBER  shift 29
 	.  error
 
 	expr  goto 45
 
 state 35
-	line:  TIME '='.expr ':' expr ':' expr 
+	line:  TIME '('.expr ':' expr ':' expr ')' 
 
-	NUMBER  shift 28
+	NUMBER  shift 29
 	.  error
 
 	expr  goto 46
 
 state 36
-	line:  TIME_SIG '='.expr ',' expr 
+	line:  TIME '='.expr ':' expr ':' expr 
 
-	NUMBER  shift 28
+	NUMBER  shift 29
 	.  error
 
 	expr  goto 47
 
 state 37
+	line:  TIME_SIG '='.expr ',' expr 
+
+	NUMBER  shift 29
+	.  error
+
+	expr  goto 48
+
+state 38
 	tone:  toneName expr.    (22)
 
 	.  reduce 22 (src line 54)
 
 
-state 38
+state 39
 	tone:  toneName toneFlags.expr 
 	tone:  toneName toneFlags.    (24)
 	toneFlags:  toneFlags.toneFlag 
 
-	NUMBER  shift 28
-	'#'  shift 40
-	'+'  shift 41
-	'-'  shift 42
+	NUMBER  shift 29
+	'#'  shift 41
+	'+'  shift 42
+	'-'  shift 43
 	.  reduce 24 (src line 57)
 
-	expr  goto 48
-	toneFlag  goto 49
-
-state 39
-	toneFlags:  toneFlag.    (33)
-
-	.  reduce 33 (src line 63)
-
+	expr  goto 49
+	toneFlag  goto 50
 
 state 40
-	toneFlag:  '#'.    (35)
+	toneFlags:  toneFlag.    (34)
 
-	.  reduce 35 (src line 67)
+	.  reduce 34 (src line 63)
 
 
 state 41
-	toneFlag:  '+'.    (36)
+	toneFlag:  '#'.    (36)
 
-	.  reduce 36 (src line 68)
+	.  reduce 36 (src line 67)
 
 
 state 42
-	toneFlag:  '-'.    (37)
+	toneFlag:  '+'.    (37)
 
 	.  reduce 37 (src line 68)
 
 
 state 43
+	toneFlag:  '-'.    (38)
+
+	.  reduce 38 (src line 68)
+
+
+state 44
 	loop:  '[' expr.    (18)
 
 	.  reduce 18 (src line 48)
 
 
-state 44
+state 45
 	line:  WORD '=' expr.    (13)
 
 	.  reduce 13 (src line 40)
 
 
-state 45
-	line:  TIME '(' expr.':' expr ':' expr ')' 
-
-	':'  shift 50
-	.  error
-
-
 state 46
-	line:  TIME '=' expr.':' expr ':' expr 
+	line:  TIME '(' expr.':' expr ':' expr ')' 
 
 	':'  shift 51
 	.  error
 
 
 state 47
-	line:  TIME_SIG '=' expr.',' expr 
+	line:  TIME '=' expr.':' expr ':' expr 
 
-	','  shift 52
+	':'  shift 52
 	.  error
 
 
 state 48
+	line:  TIME_SIG '=' expr.',' expr 
+
+	','  shift 53
+	.  error
+
+
+state 49
 	tone:  toneName toneFlags expr.    (23)
 
 	.  reduce 23 (src line 56)
 
 
-state 49
-	toneFlags:  toneFlags toneFlag.    (34)
-
-	.  reduce 34 (src line 65)
-
-
 state 50
-	line:  TIME '(' expr ':'.expr ':' expr ')' 
+	toneFlags:  toneFlags toneFlag.    (35)
 
-	NUMBER  shift 28
-	.  error
+	.  reduce 35 (src line 65)
 
-	expr  goto 53
 
 state 51
-	line:  TIME '=' expr ':'.expr ':' expr 
+	line:  TIME '(' expr ':'.expr ':' expr ')' 
 
-	NUMBER  shift 28
+	NUMBER  shift 29
 	.  error
 
 	expr  goto 54
 
 state 52
-	line:  TIME_SIG '=' expr ','.expr 
+	line:  TIME '=' expr ':'.expr ':' expr 
 
-	NUMBER  shift 28
+	NUMBER  shift 29
 	.  error
 
 	expr  goto 55
 
 state 53
-	line:  TIME '(' expr ':' expr.':' expr ')' 
+	line:  TIME_SIG '=' expr ','.expr 
 
-	':'  shift 56
+	NUMBER  shift 29
 	.  error
 
+	expr  goto 56
 
 state 54
-	line:  TIME '=' expr ':' expr.':' expr 
+	line:  TIME '(' expr ':' expr.':' expr ')' 
 
 	':'  shift 57
 	.  error
 
 
 state 55
+	line:  TIME '=' expr ':' expr.':' expr 
+
+	':'  shift 58
+	.  error
+
+
+state 56
 	line:  TIME_SIG '=' expr ',' expr.    (16)
 
 	.  reduce 16 (src line 43)
 
 
-state 56
+state 57
 	line:  TIME '(' expr ':' expr ':'.expr ')' 
 
-	NUMBER  shift 28
-	.  error
-
-	expr  goto 58
-
-state 57
-	line:  TIME '=' expr ':' expr ':'.expr 
-
-	NUMBER  shift 28
+	NUMBER  shift 29
 	.  error
 
 	expr  goto 59
 
 state 58
+	line:  TIME '=' expr ':' expr ':'.expr 
+
+	NUMBER  shift 29
+	.  error
+
+	expr  goto 60
+
+state 59
 	line:  TIME '(' expr ':' expr ':' expr.')' 
 
-	')'  shift 60
+	')'  shift 61
 	.  error
 
 
-state 59
+state 60
 	line:  TIME '=' expr ':' expr ':' expr.    (15)
 
 	.  reduce 15 (src line 42)
 
 
-state 60
+state 61
 	line:  TIME '(' expr ':' expr ':' expr ')'.    (14)
 
 	.  reduce 14 (src line 41)
 
 
-31 terminals, 10 nonterminals
-38 grammar rules, 61/16000 states
-19 shift/reduce, 0 reduce/reduce conflicts reported
+32 terminals, 10 nonterminals
+39 grammar rules, 62/16000 states
+20 shift/reduce, 0 reduce/reduce conflicts reported
 59 working sets used
 memory: parser 29/240000
 1 extra closures
-71 shift entries, 1 exceptions
+73 shift entries, 1 exceptions
 27 goto entries
 3 entries saved by goto default
-Optimizer space used: output 86/240000
-86 table entries, 25 zero
-maximum spread: 31, maximum offset: 57
+Optimizer space used: output 88/240000
+88 table entries, 26 zero
+maximum spread: 32, maximum offset: 58

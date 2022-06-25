@@ -14,7 +14,7 @@ package sakuramml
 %type<str> toneFlags
 // トークンの定義
 %token<token> LF WORD NUMBER TIME TIME_SIG
-%token<token> 'c' 'd' 'e' 'f' 'g' 'a' 'b' '#' '+' '-' '*' 
+%token<token> 'c' 'd' 'e' 'f' 'g' 'a' 'b' '#' '+' '-' '*' 'r'
 %token<token> '[' ']' ':' 'l' 'v' 'q' 'o' ',' '(' ')'
 %token<token> '@'
 %%
@@ -58,7 +58,7 @@ tone
     | toneName                  { $$ = NewToneNode($1, "", nil) }
 
 toneName
-    : 'c' | 'd' | 'e' | 'f' | 'g' | 'a' | 'b'
+    : 'c' | 'd' | 'e' | 'f' | 'g' | 'a' | 'b' | 'r'
 
 toneFlags
     : toneFlag              { $$ = $1.label      }

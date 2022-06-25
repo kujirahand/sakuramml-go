@@ -71,14 +71,19 @@ func runTone(node *Node, song *Song) error {
 	trk := song.CurTrack()
 	toneData := node.Data.(ToneData)
 	fmt.Printf("runTone: TR=%d %c%s\n", song.TrackNo, toneData.Name, toneData.Flag)
-	// calc note
-	nn := trk.Octave*12 + noteToNo(toneData.Name)
-	switch toneData.Flag {
-	case "+":
-	case "#":
-		nn += 1
-	case "-":
-		nn -= 1
+	// rest ?
+	noteNo := -1
+	if toneData.Name == 'r' {
+		noteNo = -1
+	} else {
+		// calc note
+		noteNo = trk.Octave*12 + noteToNo(toneData.Name)
+		switch toneData.Flag {
+		case "+", "#":
+			noteNo += 1
+		case "-":
+			noteNo -= 1
+		}
 	}
 	// calc length
 	length := trk.Length
@@ -88,7 +93,10 @@ func runTone(node *Node, song *Song) error {
 	} else {
 		gate = int(float64(length) * float64(trk.Qgate) / 100.0)
 	}
-	trk.AddNoteOn(trk.Time, nn, trk.Velocity, gate)
+	// NoteOn
+	if noteNo >= 0 {
+		trk.AddNoteOn(trk.Time, noteNo, trk.Velocity, gate)
+	}
 	trk.Time += length
 	return nil
 }
