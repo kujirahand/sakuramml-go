@@ -70,9 +70,7 @@ func main() {
 		}
 		opt.Outfile = out
 	}
-	if opt.Debug {
-		fmt.Println("Command line:", opt)
-	}
+	sakuramml.SakuraLog(fmt.Sprintln("Command line:", opt))
 	// load file
 	if !opt.EvalMode {
 		text, err := ioutil.ReadFile(opt.Infile)

@@ -2,12 +2,23 @@ package sakuramml
 
 import (
 	"fmt"
+	"regexp"
 )
 
 const (
 	// VERSION : sakuramml version
 	VERSION = "0.0.1"
 )
+
+var SakuraDebug bool = true
+
+func SakuraLog(msg string) {
+	if SakuraDebug {
+		re := regexp.MustCompile(`\s+$`)
+		msg = re.ReplaceAllString(msg, "")
+		fmt.Println("[LOG] " + msg)
+	}
+}
 
 // CompilerOptions : Compiler CompilerOptions
 type CompilerOptions struct {
@@ -38,27 +49,23 @@ func Compile(opt *CompilerOptions) (*Song, error) {
 	// init
 	songObj := NewSong()
 	songObj.Debug = opt.Debug
+	SakuraDebug = songObj.Debug
 	songObj.Eval = Eval // Set Eval Func
 	// sutoton
-	if opt.Debug {
-		fmt.Println("--- sutoton ---")
-	}
+	SakuraLog("--- Sutoton ---")
 	src, err := SutotonConvert(opt.Source)
+	SakuraLog(src)
 	if err != nil {
 		return nil, err
 	}
 	// parse
-	if opt.Debug {
-		fmt.Println("--- parse ---")
-	}
+	SakuraLog("--- Parse ---")
 	node, err := Parse(src, 0)
 	if err != nil {
 		return nil, err
 	}
 	// exec
-	if opt.Debug {
-		fmt.Println("--- exec ---")
-	}
-	Run(node, songObj)
+	SakuraLog("--- Run ---")
+	SakuraRun(node, songObj)
 	return songObj, nil
 }

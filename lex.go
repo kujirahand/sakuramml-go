@@ -3,6 +3,7 @@ package sakuramml
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 // Token を表す
@@ -46,7 +47,7 @@ func Parse(code string, fileno int) (*Node, error) {
 func (p *Lexer) Lex(lval *yySymType) int {
 	tok := p.getToken(lval)
 	p.lastToken = &lval.token
-	fmt.Printf("[%s]", getTokenName(tok))
+	SakuraLog(fmt.Sprintf("[Lex] %s", getTokenName(tok)))
 	return tok
 }
 
@@ -79,7 +80,7 @@ func (p *Lexer) getToken(lval *yySymType) int {
 		return LF
 	}
 	// NUMBER ?
-	if isDigit(c) || c == '^' || c == '%' {
+	if isDigit(c) || c == '^' || c == '%' || (c == '-' && isDigit(p.slexer.peekNext())) {
 		return p.lexNumber(lval)
 	}
 	// 演算子 ?
@@ -109,6 +110,10 @@ func (p *Lexer) getToken(lval *yySymType) int {
 
 func (p *Lexer) lexNumber(lval *yySymType) int {
 	s := ""
+	if p.slexer.peek() == '-' {
+		s += "-"
+		p.slexer.next()
+	}
 	for !p.slexer.isEOF() {
 		c := p.slexer.peek()
 		if isDigit(c) || c == '.' || c == '^' || c == '%' {
@@ -173,7 +178,9 @@ func (p *Lexer) Error(e string) {
 	if p.lastToken != nil {
 		tok = p.lastToken.label
 	}
-	msg := fmt.Sprintf("[ERROR] (%d) [%s] %s", CurLine.LineNo, tok, e)
+	e = strings.ReplaceAll(e, "syntax error", "文法エラー")
+	e = strings.ReplaceAll(e, "unexpected $unk", "解析できない文字がありました。")
+	msg := fmt.Sprintf("[ERROR] (%d) [%s] %s", CurLine.LineNo+1, tok, e)
 	err := fmt.Errorf(msg)
 	p.parseError = err
 }

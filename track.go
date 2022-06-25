@@ -14,15 +14,17 @@ const (
 
 // Track is info of track
 type Track struct {
-	Channel   int
-	Length    int // step
-	Octave    int
-	Qgate     int    // ref: QgateMode
-	QgateMode string // step or rate
-	Velocity  int
-	Time      int
-	PitchBend int
-	Events    []Event
+	Channel    int
+	Length     int // step
+	Octave     int
+	OctaveOnce int
+	Qgate      int    // ref: QgateMode
+	QgateMode  string // step or rate
+	Velocity   int
+	Time       int
+	PitchBend  int
+	Timing     int
+	Events     []Event
 }
 
 // NewTrack func
@@ -35,7 +37,9 @@ func NewTrack(channel int, timebase int) *Track {
 	track.QgateMode = QgateModeRate
 	track.Velocity = 100
 	track.Octave = 5
+	track.OctaveOnce = 0
 	track.PitchBend = 0
+	track.Timing = 0
 	track.Time = 0
 	return &track
 }

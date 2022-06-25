@@ -60,6 +60,7 @@ func (c *SutotonConverter) SetDefaultItem() {
 	c.AddSutoton("チャンネル", "CH=")
 	c.AddSutoton("テンポ", "Tempo")
 	c.AddSutoton("読む", "Include")
+	c.AddSutoton("　", " ")
 	c.Sort()
 }
 

@@ -89,6 +89,7 @@ type ToneData struct {
 	Name   rune
 	Flag   string
 	Length *Node
+	NoteNo *Node
 }
 
 func (p ToneData) toString() string {
@@ -96,12 +97,13 @@ func (p ToneData) toString() string {
 }
 
 // NewToneNode : tone node
-func NewToneNode(tok Token, flag string, len *Node) *Node {
+func NewToneNode(tok Token, flag string, len *Node, noteNo *Node) *Node {
 	node := NewNode(NodeTone)
 	node.Data = ToneData{
 		Name:   rune(tok.label[0]),
 		Flag:   flag,
 		Length: len,
+		NoteNo: noteNo,
 	}
 	node.Exec = runTone
 	return node
@@ -132,7 +134,11 @@ type CommandData struct {
 }
 
 func (p CommandData) toString() string {
-	return string(p.Name) + p.Value.ToString(0)
+	s := p.Name
+	if p.Value != nil {
+		s += p.Value.ToString(0)
+	}
+	return s
 }
 
 // NewToneNode : tone node
@@ -222,7 +228,7 @@ func (p TimeData) toString() string {
 	return p.mode + "(?:?:?)"
 }
 
-// NewToneNode : tone node
+// NewTimeNode : time node
 func NewTimeNode(tok Token, v1 *Node, v2 *Node, v3 *Node) *Node {
 	node := NewNode(NodeTime)
 	node.Data = TimeData{
@@ -235,7 +241,7 @@ func NewTimeNode(tok Token, v1 *Node, v2 *Node, v3 *Node) *Node {
 	return node
 }
 
-// NewToneNode : tone node
+// NewTimeSigNode : node
 func NewTimeSigNode(tok Token, v1 *Node, v2 *Node) *Node {
 	node := NewNode(NodeTimeSig)
 	node.Data = TimeData{

@@ -49,10 +49,16 @@ var yyToknames = [...]string{
 	"'v'",
 	"'q'",
 	"'o'",
+	"'t'",
 	"','",
 	"'('",
 	"')'",
+	"'n'",
 	"'@'",
+	"'>'",
+	"'<'",
+	"'`'",
+	"'\"'",
 	"'='",
 }
 
@@ -62,7 +68,7 @@ const yyEofCode = 1
 const yyErrCode = 2
 const yyInitialStackSize = 16
 
-//line parser.go.y:71
+//line parser.go.y:78
 
 //line yacctab:1
 var yyExca = [...]int8{
@@ -73,81 +79,88 @@ var yyExca = [...]int8{
 
 const yyPrivate = 57344
 
-const yyLast = 88
+const yyLast = 104
 
 var yyAct = [...]int8{
-	28, 40, 35, 37, 34, 36, 61, 53, 58, 30,
-	31, 32, 33, 57, 52, 51, 38, 44, 29, 29,
-	3, 39, 15, 27, 5, 4, 2, 1, 41, 42,
-	43, 0, 0, 0, 0, 45, 46, 47, 48, 0,
-	49, 50, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 54, 55, 56, 0, 0, 0, 59, 60,
-	6, 12, 0, 13, 14, 19, 20, 21, 22, 23,
-	24, 25, 0, 0, 0, 0, 26, 16, 17, 18,
-	7, 8, 10, 9, 0, 0, 0, 11,
+	34, 47, 42, 44, 41, 71, 62, 59, 68, 67,
+	43, 61, 60, 36, 37, 38, 39, 40, 35, 35,
+	46, 45, 51, 52, 3, 20, 5, 33, 48, 49,
+	50, 4, 2, 1, 0, 0, 0, 0, 0, 0,
+	0, 0, 53, 54, 55, 56, 0, 57, 58, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	63, 64, 65, 66, 0, 0, 0, 0, 69, 70,
+	6, 17, 0, 18, 19, 25, 26, 27, 28, 29,
+	30, 31, 0, 0, 0, 0, 32, 22, 23, 24,
+	11, 12, 14, 13, 15, 0, 0, 0, 21, 16,
+	7, 8, 9, 10,
 }
 
 var yyPact = [...]int16{
-	56, -1000, 56, -1000, -1000, -1000, -1000, 13, 13, 13,
-	13, 13, -28, -27, -29, 12, 13, -1000, -1000, -1000,
+	66, -1000, 66, -1000, -1000, -1000, -1000, -1000, -1000, -1000,
+	-1000, 13, 13, 13, 13, 13, 13, -34, -28, -35,
+	12, 13, 13, -1000, -1000, -1000, -1000, -1000, -1000, -1000,
 	-1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000,
-	-1000, -1000, -1000, -1000, 13, 13, 13, 13, -1000, 12,
-	-1000, -1000, -1000, -1000, -1000, -1000, -8, -9, -21, -1000,
-	-1000, 13, 13, 13, -10, -15, -1000, 13, 13, -24,
+	-1000, 13, 13, 13, 13, -1000, 12, -1000, -1000, -1000,
+	-1000, -22, -1000, -1000, -11, -12, -23, -1000, -1000, 13,
+	13, 13, 13, -1000, -14, -15, -1000, 13, 13, -26,
 	-1000, -1000,
 }
 
 var yyPgo = [...]int8{
-	0, 27, 26, 20, 25, 24, 0, 22, 1, 21,
+	0, 33, 32, 24, 31, 26, 0, 25, 1, 20,
 }
 
 var yyR1 = [...]int8{
 	0, 1, 2, 2, 2, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 6, 5, 5,
-	5, 5, 4, 4, 4, 4, 7, 7, 7, 7,
-	7, 7, 7, 7, 9, 9, 8, 8, 8,
+	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+	3, 3, 6, 5, 5, 5, 5, 4, 4, 4,
+	4, 4, 4, 7, 7, 7, 7, 7, 7, 7,
+	7, 9, 9, 8, 8, 8,
 }
 
 var yyR2 = [...]int8{
-	0, 1, 0, 1, 2, 1, 1, 1, 2, 2,
-	2, 2, 2, 3, 8, 7, 5, 1, 2, 1,
-	1, 1, 2, 3, 2, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 2, 1, 1, 1,
+	0, 1, 0, 1, 2, 1, 1, 1, 1, 1,
+	1, 1, 2, 2, 2, 2, 2, 2, 3, 8,
+	7, 5, 1, 2, 1, 1, 1, 2, 3, 2,
+	1, 2, 4, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 2, 1, 1, 1,
 }
 
 var yyChk = [...]int16{
-	-1000, -1, -2, -3, -4, -5, 4, 24, 25, 27,
-	26, 31, 5, 7, 8, -7, 21, 22, 23, 9,
-	10, 11, 12, 13, 14, 15, 20, -3, -6, 6,
-	-6, -6, -6, -6, 32, 29, 32, 32, -6, -9,
-	-8, 16, 17, 18, -6, -6, -6, -6, -6, -6,
-	-8, 23, 23, 28, -6, -6, -6, 23, 23, -6,
-	-6, 30,
+	-1000, -1, -2, -3, -4, -5, 4, 34, 35, 36,
+	37, 24, 25, 27, 26, 28, 33, 5, 7, 8,
+	-7, 32, 21, 22, 23, 9, 10, 11, 12, 13,
+	14, 15, 20, -3, -6, 6, -6, -6, -6, -6,
+	-6, 38, 30, 38, 38, -6, -9, -8, 16, 17,
+	18, -6, -6, -6, -6, -6, -6, -6, -8, 29,
+	23, 23, 29, -6, -6, -6, -6, 23, 23, -6,
+	-6, 31,
 }
 
 var yyDef = [...]int8{
-	2, -2, 1, 3, 5, 6, 7, 0, 0, 0,
-	0, 0, 0, 0, 0, 25, 19, 20, 21, 26,
-	27, 28, 29, 30, 31, 32, 33, 4, 8, 17,
-	9, 10, 11, 12, 0, 0, 0, 0, 22, 24,
-	34, 36, 37, 38, 18, 13, 0, 0, 0, 23,
-	35, 0, 0, 0, 0, 0, 16, 0, 0, 0,
-	15, 14,
+	2, -2, 1, 3, 5, 6, 7, 8, 9, 10,
+	11, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	30, 0, 24, 25, 26, 33, 34, 35, 36, 37,
+	38, 39, 40, 4, 12, 22, 13, 14, 15, 16,
+	17, 0, 0, 0, 0, 27, 29, 41, 43, 44,
+	45, 31, 23, 18, 0, 0, 0, 28, 42, 0,
+	0, 0, 0, 32, 0, 0, 21, 0, 0, 0,
+	20, 19,
 }
 
 var yyTok1 = [...]int8{
 	1, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 16, 3, 3, 3, 3,
-	29, 30, 19, 17, 28, 18, 3, 3, 3, 3,
+	3, 3, 3, 3, 37, 16, 3, 3, 3, 3,
+	30, 31, 19, 17, 29, 18, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 23, 3,
-	3, 32, 3, 3, 31, 3, 3, 3, 3, 3,
+	35, 38, 34, 3, 33, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 21, 3, 22, 3, 3, 3, 14, 15, 9,
+	3, 21, 3, 22, 3, 3, 36, 14, 15, 9,
 	10, 11, 12, 13, 3, 3, 3, 3, 24, 3,
-	3, 27, 3, 26, 20, 3, 3, 3, 25,
+	32, 27, 3, 26, 20, 3, 28, 3, 25,
 }
 
 var yyTok2 = [...]int8{
@@ -528,122 +541,164 @@ yydefault:
 			yyVAL.node = NewNode(NodeEOL)
 		}
 	case 8:
-		yyDollar = yyS[yypt-2 : yypt+1]
+		yyDollar = yyS[yypt-1 : yypt+1]
 //line parser.go.y:35
 		{
-			yyVAL.node = NewCommandNode(yyDollar[1].token, "l", yyDollar[2].node)
+			yyVAL.node = NewCommandNode(yyDollar[1].token, ">", nil)
 		}
 	case 9:
-		yyDollar = yyS[yypt-2 : yypt+1]
+		yyDollar = yyS[yypt-1 : yypt+1]
 //line parser.go.y:36
 		{
-			yyVAL.node = NewCommandNode(yyDollar[1].token, "v", yyDollar[2].node)
+			yyVAL.node = NewCommandNode(yyDollar[1].token, "<", nil)
 		}
 	case 10:
-		yyDollar = yyS[yypt-2 : yypt+1]
+		yyDollar = yyS[yypt-1 : yypt+1]
 //line parser.go.y:37
 		{
-			yyVAL.node = NewCommandNode(yyDollar[1].token, "o", yyDollar[2].node)
+			yyVAL.node = NewCommandNode(yyDollar[1].token, "`", nil)
 		}
 	case 11:
-		yyDollar = yyS[yypt-2 : yypt+1]
+		yyDollar = yyS[yypt-1 : yypt+1]
 //line parser.go.y:38
 		{
-			yyVAL.node = NewCommandNode(yyDollar[1].token, "q", yyDollar[2].node)
+			yyVAL.node = NewCommandNode(yyDollar[1].token, "\"", nil)
 		}
 	case 12:
 		yyDollar = yyS[yypt-2 : yypt+1]
 //line parser.go.y:39
 		{
-			yyVAL.node = NewCommandNode(yyDollar[1].token, "@", yyDollar[2].node)
+			yyVAL.node = NewCommandNode(yyDollar[1].token, "l", yyDollar[2].node)
 		}
 	case 13:
-		yyDollar = yyS[yypt-3 : yypt+1]
+		yyDollar = yyS[yypt-2 : yypt+1]
 //line parser.go.y:40
+		{
+			yyVAL.node = NewCommandNode(yyDollar[1].token, "v", yyDollar[2].node)
+		}
+	case 14:
+		yyDollar = yyS[yypt-2 : yypt+1]
+//line parser.go.y:41
+		{
+			yyVAL.node = NewCommandNode(yyDollar[1].token, "o", yyDollar[2].node)
+		}
+	case 15:
+		yyDollar = yyS[yypt-2 : yypt+1]
+//line parser.go.y:42
+		{
+			yyVAL.node = NewCommandNode(yyDollar[1].token, "q", yyDollar[2].node)
+		}
+	case 16:
+		yyDollar = yyS[yypt-2 : yypt+1]
+//line parser.go.y:43
+		{
+			yyVAL.node = NewCommandNode(yyDollar[1].token, "t", yyDollar[2].node)
+		}
+	case 17:
+		yyDollar = yyS[yypt-2 : yypt+1]
+//line parser.go.y:44
+		{
+			yyVAL.node = NewCommandNode(yyDollar[1].token, "@", yyDollar[2].node)
+		}
+	case 18:
+		yyDollar = yyS[yypt-3 : yypt+1]
+//line parser.go.y:45
 		{
 			yyVAL.node = NewCommandNode(yyDollar[1].token, "WORD", yyDollar[3].node)
 		}
-	case 14:
+	case 19:
 		yyDollar = yyS[yypt-8 : yypt+1]
-//line parser.go.y:41
+//line parser.go.y:46
 		{
 			yyVAL.node = NewTimeNode(yyDollar[1].token, yyDollar[3].node, yyDollar[5].node, yyDollar[7].node)
 		}
-	case 15:
+	case 20:
 		yyDollar = yyS[yypt-7 : yypt+1]
-//line parser.go.y:42
+//line parser.go.y:47
 		{
 			yyVAL.node = NewTimeNode(yyDollar[1].token, yyDollar[3].node, yyDollar[5].node, yyDollar[7].node)
 		}
-	case 16:
+	case 21:
 		yyDollar = yyS[yypt-5 : yypt+1]
-//line parser.go.y:43
+//line parser.go.y:48
 		{
 			yyVAL.node = NewTimeSigNode(yyDollar[1].token, yyDollar[3].node, yyDollar[5].node)
 		}
-	case 17:
-		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:46
-		{
-			yyVAL.node = NewNumberNode(yyDollar[1].token)
-		}
-	case 18:
-		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:49
-		{
-			yyVAL.node = NewLoopNodeBegin(yyDollar[1].token, yyDollar[2].node)
-		}
-	case 19:
-		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:50
-		{
-			yyVAL.node = NewLoopNodeBegin(yyDollar[1].token, nil)
-		}
-	case 20:
+	case 22:
 		yyDollar = yyS[yypt-1 : yypt+1]
 //line parser.go.y:51
 		{
-			yyVAL.node = NewLoopNodeEnd(yyDollar[1].token)
-		}
-	case 21:
-		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:52
-		{
-			yyVAL.node = NewLoopNodeBreak(yyDollar[1].token)
-		}
-	case 22:
-		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:55
-		{
-			yyVAL.node = NewToneNode(yyDollar[1].token, "", yyDollar[2].node)
+			yyVAL.node = NewNumberNode(yyDollar[1].token)
 		}
 	case 23:
-		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.go.y:56
+		yyDollar = yyS[yypt-2 : yypt+1]
+//line parser.go.y:54
 		{
-			yyVAL.node = NewToneNode(yyDollar[1].token, yyDollar[2].str, yyDollar[3].node)
+			yyVAL.node = NewLoopNodeBegin(yyDollar[1].token, yyDollar[2].node)
 		}
 	case 24:
-		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:57
+		yyDollar = yyS[yypt-1 : yypt+1]
+//line parser.go.y:55
 		{
-			yyVAL.node = NewToneNode(yyDollar[1].token, yyDollar[2].str, nil)
+			yyVAL.node = NewLoopNodeBegin(yyDollar[1].token, nil)
 		}
 	case 25:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.go.y:58
+//line parser.go.y:56
 		{
-			yyVAL.node = NewToneNode(yyDollar[1].token, "", nil)
+			yyVAL.node = NewLoopNodeEnd(yyDollar[1].token)
 		}
-	case 34:
+	case 26:
 		yyDollar = yyS[yypt-1 : yypt+1]
+//line parser.go.y:57
+		{
+			yyVAL.node = NewLoopNodeBreak(yyDollar[1].token)
+		}
+	case 27:
+		yyDollar = yyS[yypt-2 : yypt+1]
+//line parser.go.y:60
+		{
+			yyVAL.node = NewToneNode(yyDollar[1].token, "", yyDollar[2].node, nil)
+		}
+	case 28:
+		yyDollar = yyS[yypt-3 : yypt+1]
+//line parser.go.y:61
+		{
+			yyVAL.node = NewToneNode(yyDollar[1].token, yyDollar[2].str, yyDollar[3].node, nil)
+		}
+	case 29:
+		yyDollar = yyS[yypt-2 : yypt+1]
+//line parser.go.y:62
+		{
+			yyVAL.node = NewToneNode(yyDollar[1].token, yyDollar[2].str, nil, nil)
+		}
+	case 30:
+		yyDollar = yyS[yypt-1 : yypt+1]
+//line parser.go.y:63
+		{
+			yyVAL.node = NewToneNode(yyDollar[1].token, "", nil, nil)
+		}
+	case 31:
+		yyDollar = yyS[yypt-2 : yypt+1]
 //line parser.go.y:64
+		{
+			yyVAL.node = NewToneNode(yyDollar[1].token, "", nil, yyDollar[2].node)
+		}
+	case 32:
+		yyDollar = yyS[yypt-4 : yypt+1]
+//line parser.go.y:65
+		{
+			yyVAL.node = NewToneNode(yyDollar[1].token, "", yyDollar[4].node, yyDollar[2].node)
+		}
+	case 41:
+		yyDollar = yyS[yypt-1 : yypt+1]
+//line parser.go.y:71
 		{
 			yyVAL.str = yyDollar[1].token.label
 		}
-	case 35:
+	case 42:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.go.y:65
+//line parser.go.y:72
 		{
 			yyVAL.str = yyDollar[1].str + yyDollar[2].token.label
 		}

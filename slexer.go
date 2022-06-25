@@ -47,9 +47,16 @@ func (p *SLexer) isEOF() bool {
 
 func (p *SLexer) peek() rune {
 	if p.isEOF() {
-		return 0
+		return rune(0)
 	}
 	return p.src[p.index]
+}
+
+func (p *SLexer) peekNext() rune {
+	if (p.index + 1) < len(p.src) {
+		return p.src[p.index+1]
+	}
+	return rune(0)
 }
 
 func (p *SLexer) next() {

@@ -78,6 +78,13 @@ func (song *Song) PopSValue() SValue {
 	return v.(SValue)
 }
 
+// PopStepValue func
+func (song *Song) PopStepValue() int {
+	iv := song.PopStack()
+	sv := iv.(SValue).ToStr()
+	return song.StrToStep(sv)
+}
+
 // PushIValue func
 func (song *Song) PushIValue(v int) {
 	song.Stack = append(song.Stack, SNumber(v))

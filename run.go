@@ -3,7 +3,7 @@ package sakuramml
 import "fmt"
 
 // Run : 実行
-func Run(node *Node, so *Song) error {
+func SakuraRun(node *Node, so *Song) error {
 	return runNode(node, so)
 }
 
@@ -20,7 +20,7 @@ func runNodeList(node *Node, so *Song) error {
 	so.JumpTo = -1
 	for so.Index < len(node.Children) {
 		n := node.Children[so.Index]
-		print("run:", n.ToString(0))
+		SakuraLog("run: " + n.ToString(0))
 		err := n.Exec(n, so)
 		if err != nil {
 			return err
@@ -37,7 +37,6 @@ func runNodeList(node *Node, so *Song) error {
 
 func runNumber(node *Node, so *Song) error {
 	numData := node.Data.(ValueData)
-	fmt.Printf("runNumber=%s\n", numData.str)
 	so.PushSValue(numData.str)
 	return nil
 }
@@ -70,23 +69,35 @@ func noteToNo(n rune) int {
 func runTone(node *Node, song *Song) error {
 	trk := song.CurTrack()
 	toneData := node.Data.(ToneData)
-	fmt.Printf("runTone: TR=%d %c%s\n", song.TrackNo, toneData.Name, toneData.Flag)
 	// rest ?
 	noteNo := -1
 	if toneData.Name == 'r' {
 		noteNo = -1
+	} else if toneData.Name == 'n' {
+		toneData.NoteNo.Exec(toneData.NoteNo, song)
+		noteNo = InRange(0, song.PopIValue(), 127)
 	} else {
 		// calc note
-		noteNo = trk.Octave*12 + noteToNo(toneData.Name)
+		o := trk.Octave
+		if trk.OctaveOnce != 0 {
+			o += trk.OctaveOnce
+			trk.OctaveOnce = 0
+		}
+		noteNo = o*12 + noteToNo(toneData.Name)
 		switch toneData.Flag {
 		case "+", "#":
 			noteNo += 1
 		case "-":
 			noteNo -= 1
 		}
+		noteNo = InRange(0, noteNo, 127)
 	}
 	// calc length
 	length := trk.Length
+	if toneData.Length != nil {
+		toneData.Length.Exec(toneData.Length, song)
+		length = song.PopStepValue()
+	}
 	gate := length
 	if trk.QgateMode == "step" {
 		gate = trk.Qgate
@@ -95,20 +106,22 @@ func runTone(node *Node, song *Song) error {
 	}
 	// NoteOn
 	if noteNo >= 0 {
-		trk.AddNoteOn(trk.Time, noteNo, trk.Velocity, gate)
+		trk.AddNoteOn(trk.Time+trk.Timing, noteNo, trk.Velocity, gate)
 	}
 	trk.Time += length
 	return nil
 }
 
 func runCommand(node *Node, song *Song) error {
-	var v SValue
+	var v SValue = SStr("")
 	trk := song.CurTrack()
 	data := node.Data.(CommandData)
 	// Get Command Value
-	err := data.Value.Exec(data.Value, song)
-	if err == nil {
-		v = song.PopSValue()
+	if data.Value != nil {
+		err := data.Value.Exec(data.Value, song)
+		if err == nil {
+			v = song.PopSValue()
+		}
 	}
 
 	switch string(data.Name) {
@@ -118,17 +131,26 @@ func runCommand(node *Node, song *Song) error {
 		trk.Length = song.StrToStep(v.ToStr())
 	case "q":
 		trk.Qgate = v.ToInt()
+	case "t":
+		trk.Timing = v.ToInt()
 	case "o":
-		trk.Octave = v.ToInt()
+		trk.Octave = InRange(0, v.ToInt(), 10)
 	case "VOICE", "Voice", "@":
 		trk.AddProgramChange(trk.Time, v.ToInt())
 	case "TR", "Track", "TRACK":
-		fmt.Printf("@@@TR=%d\n", v.ToInt())
 		song.TrackNo = v.ToInt()
 	case "CH", "Channel", "CHANNEL":
-		song.CurTrack().Channel = InRange(1, v.ToInt(), 16) - 1
+		trk.Channel = InRange(1, v.ToInt(), 16) - 1
+	case ">":
+		trk.Octave = InRange(0, trk.Octave+1, 10)
+	case "<":
+		trk.Octave = InRange(0, trk.Octave-1, 10)
+	case "`":
+		trk.OctaveOnce += 1
+	case "\"":
+		trk.OctaveOnce -= 1
 	}
-	println("@@@runCommand=", string(data.Name), v.ToStr())
+	// println("@@@runCommand=", string(data.Name), v.ToStr())
 	return nil
 }
 
@@ -181,7 +203,6 @@ func runTime(node *Node, song *Song) error {
 	//
 	base := song.Timebase * 4 / song.TimeSigDeno
 	total := (mes-1)*(base*song.TimeSigFrac) + (beat-1)*base + tick
-	// fmt.Printf("Time=%d (%d:%d:%d)\n", total, mes, beat, tick)
 	song.CurTrack().Time = total
 	return nil
 }
@@ -192,7 +213,7 @@ func runTimeSig(node *Node, song *Song) error {
 	timeData.v2.Exec(timeData.v2, song)
 	v2 := song.PopIValue()
 	v1 := song.PopIValue()
-	fmt.Printf("TimeSig=%d,%d\n", v1, v2)
+	SakuraLog(fmt.Sprintf("TimeSig=%d,%d\n", v1, v2))
 	song.TimeSigFrac = v1
 	song.TimeSigDeno = v2
 	return nil

@@ -15,8 +15,8 @@ package sakuramml
 // トークンの定義
 %token<token> LF WORD NUMBER TIME TIME_SIG
 %token<token> 'c' 'd' 'e' 'f' 'g' 'a' 'b' '#' '+' '-' '*' 'r'
-%token<token> '[' ']' ':' 'l' 'v' 'q' 'o' ',' '(' ')'
-%token<token> '@'
+%token<token> '[' ']' ':' 'l' 'v' 'q' 'o' 't' ',' '(' ')' 'n'
+%token<token> '@' '>' '<' '`' '"'
 %%
 
 // 文法規則を指定
@@ -32,10 +32,15 @@ line
     : tone
     | loop
     | LF                { $$ = NewNode(NodeEOL) }
+    | '>'               { $$ = NewCommandNode($1, ">", nil) }
+    | '<'               { $$ = NewCommandNode($1, "<", nil) }
+    | '`'               { $$ = NewCommandNode($1, "`", nil) }
+    | '"'               { $$ = NewCommandNode($1, "\"", nil) }
     | 'l' expr          { $$ = NewCommandNode($1, "l", $2) }
     | 'v' expr          { $$ = NewCommandNode($1, "v", $2) }
     | 'o' expr          { $$ = NewCommandNode($1, "o", $2) }
     | 'q' expr          { $$ = NewCommandNode($1, "q", $2) }
+    | 't' expr          { $$ = NewCommandNode($1, "t", $2) }
     | '@' expr          { $$ = NewCommandNode($1, "@", $2) }
     | WORD '=' expr     { $$ = NewCommandNode($1, "WORD", $3) }
     | TIME '(' expr ':' expr ':' expr ')'   { $$ = NewTimeNode($1, $3, $5, $7) }
@@ -52,10 +57,12 @@ loop
     | ':'               { $$ = NewLoopNodeBreak($1) }
 
 tone
-    : toneName expr             { $$ = NewToneNode($1, "", $2) }
-    | toneName toneFlags expr   { $$ = NewToneNode($1, $2, $3) }
-    | toneName toneFlags        { $$ = NewToneNode($1, $2, nil) }
-    | toneName                  { $$ = NewToneNode($1, "", nil) }
+    : toneName expr             { $$ = NewToneNode($1, "", $2, nil) }
+    | toneName toneFlags expr   { $$ = NewToneNode($1, $2, $3, nil) }
+    | toneName toneFlags        { $$ = NewToneNode($1, $2, nil, nil) }
+    | toneName                  { $$ = NewToneNode($1, "", nil, nil) }
+    | 'n' expr                  { $$ = NewToneNode($1, "", nil, $2) }
+    | 'n' expr ',' expr         { $$ = NewToneNode($1, "", $4, $2) }
 
 toneName
     : 'c' | 'd' | 'e' | 'f' | 'g' | 'a' | 'b' | 'r'
