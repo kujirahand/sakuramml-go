@@ -33,6 +33,10 @@ const (
 	NodeLet
 	// NodeGetVar : Get Variable
 	NodeGetVar
+	// NodeStr : str
+	NodeStr
+	// NodePrint : print
+	NodePrint
 )
 
 var nodeTypeMap map[int]string = map[int]string{
@@ -50,6 +54,8 @@ var nodeTypeMap map[int]string = map[int]string{
 	NodeComment:   "NodeComment",
 	NodeLet:       "NodeLet",
 	NodeGetVar:    "NodeGetVar",
+	NodeStr:       "NewStrNode",
+	NodePrint:     "NodePrint",
 }
 
 // ExecFunc func
@@ -217,6 +223,14 @@ func NewNumberNode(t Token) *Node {
 	return n
 }
 
+// NewStrNode : str
+func NewStrNode(t Token) *Node {
+	n := NewNode(NodeStr)
+	n.Data = ValueData{str: t.valueStr}
+	n.Exec = runStr
+	return n
+}
+
 // NewLoopNodeBegin : loop begin
 func NewLoopNodeBegin(t Token, expr *Node) *Node {
 	n := NewNode(NodeLoopBegin)
@@ -325,5 +339,12 @@ func NewGetVarNode(tok Token) *Node {
 	node := NewNode(NodeGetVar)
 	node.Data = ParamsData{name: tok.label}
 	node.Exec = runGetVar
+	return node
+}
+
+func NewPrintNode(arg *Node) *Node {
+	node := NewNode(NodePrint)
+	node.Data = ParamsData{v1: arg}
+	node.Exec = runPrint
 	return node
 }

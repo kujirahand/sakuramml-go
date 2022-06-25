@@ -13,7 +13,7 @@ package sakuramml
 %type<token> toneName toneFlag
 %type<str> toneFlags
 // トークンの定義
-%token<token> LF WORD NUMBER TIME TIME_SIG COMMENT INT STR 
+%token<token> LF WORD NUMBER TIME TIME_SIG COMMENT INT STR MMLSTR PRINT
 %token<token> PAREN_L PAREN_R SUB DIV
 %token<token> 'c' 'd' 'e' 'f' 'g' 'a' 'b' '#' '+' '-' '*' 'r'
 %token<token> '[' ']' ':' 'l' 'v' 'q' 'o' 't' ',' '(' ')' 'n'
@@ -56,11 +56,14 @@ line
     | TIME_SIG '=' expr ',' expr            { $$ = NewTimeSigNode($1, $3, $5) }
     | COMMENT                               { $$ = NewCommentNode($1) }
     | INT WORD '=' expr                     { $$ = NewLetNode($1, $2, $4) }
-    | STR WORD '=' PAREN_L expr PAREN_R     { $$ = NewLetNode($1, $2, $5) }
+    | STR WORD '=' expr                     { $$ = NewLetNode($1, $2, $4) }
+    | PRINT '=' expr { $$ = NewPrintNode($3) }
+    | PRINT '(' expr ')' { $$ = NewPrintNode($3) }
 
 expr
     : NUMBER            { $$ = NewNumberNode($1) }
     | WORD              { $$ = NewGetVarNode($1) }
+    | MMLSTR            { $$ = NewStrNode($1) }
 
 loop
     : '[' expr          { $$ = NewLoopNodeBegin($1, $2) }

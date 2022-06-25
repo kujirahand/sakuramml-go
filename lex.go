@@ -10,6 +10,7 @@ import (
 type Token struct {
 	label    string
 	value    float64
+	valueStr string
 	lineinfo LineInfo
 }
 
@@ -89,12 +90,6 @@ func (p *Lexer) getToken(lval *yySymType) int {
 	if isDigit(c) || c == '^' || c == '%' || (c == '-' && isDigit(p.slexer.peekNext())) {
 		return p.lexNumber(lval)
 	}
-	// 演算子 ?
-	if isFlag(c) {
-		p.slexer.next()
-		lval.token = p.newToken(string(c))
-		return int(c)
-	}
 	// 小文字コマンド
 	if 'a' <= c && c <= 'z' {
 		lval.token = p.newToken(string(c))
@@ -105,23 +100,49 @@ func (p *Lexer) getToken(lval *yySymType) int {
 	if 'A' <= c && c <= 'Z' || c == '_' {
 		return p.lexWord(lval)
 	}
-	// 記号
+	// 文字列？
 	if c == '{' {
-		p.slexer.next()
-		lval.token = p.newToken("{")
-		return PAREN_L
+		return p.lexString(lval)
 	}
-	if c == '}' {
+	// 演算子 ?
+	if isFlag(c) {
 		p.slexer.next()
-		lval.token = p.newToken("}")
-		return PAREN_R
+		lval.token = p.newToken(string(c))
+		return int(c)
 	}
+	// その他の記号
 	if ('!' <= c && c <= '/') || (':' <= c && c <= '@') || ('[' <= c && c <= '`') || ('{' <= c && c <= '~') {
 		p.slexer.next()
 		lval.token = p.newToken(string(c))
 		return int(c)
 	}
 	return -1
+}
+
+func (p *Lexer) lexString(lval *yySymType) int {
+	nest := 1
+	p.slexer.next() // skip '{'
+	pstr := ""
+	for !p.slexer.isEOF() {
+		if p.slexer.peek() == '{' {
+			nest++
+			p.slexer.next()
+			pstr += "{"
+			continue
+		}
+		if p.slexer.peek() == '}' {
+			p.slexer.next()
+			nest--
+			if nest == 0 {
+				break
+			}
+			pstr += "}"
+			continue
+		}
+		pstr += string(p.slexer.nextRune())
+	}
+	lval.token = p.newTokenStr("string", pstr)
+	return MMLSTR
 }
 
 func (p *Lexer) lexNumber(lval *yySymType) int {
@@ -169,6 +190,8 @@ func (p *Lexer) lexWord(lval *yySymType) int {
 		return STR
 	case "SUB", "Sub":
 		return SUB
+	case "PRINT":
+		return PRINT
 	}
 	return WORD
 }
@@ -191,6 +214,14 @@ func (p *Lexer) newToken(label string) Token {
 	return Token{
 		label:    label,
 		lineinfo: p.slexer.getLineInfo(),
+	}
+}
+
+func (p *Lexer) newTokenStr(label string, s string) Token {
+	return Token{
+		label:    label,
+		lineinfo: p.slexer.getLineInfo(),
+		valueStr: s,
 	}
 }
 

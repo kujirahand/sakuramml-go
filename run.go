@@ -41,6 +41,12 @@ func runNumber(node *Node, so *Song) error {
 	return nil
 }
 
+func runStr(node *Node, so *Song) error {
+	numData := node.Data.(ValueData)
+	so.PushSValue(numData.str)
+	return nil
+}
+
 func runNop(node *Node, song *Song) error {
 	song.LastLineNo = node.Line.LineNo
 	return nil
@@ -257,5 +263,13 @@ func runGetVar(node *Node, song *Song) error {
 	val := song.Variable.GetValue(name)
 	// fmt.Printf("getvar %s = %s\n", name, val.ToString())
 	song.PushSValue(val.ToString())
+	return nil
+}
+
+func runPrint(node *Node, song *Song) error {
+	params := node.Data.(ParamsData)
+	params.v1.Exec(params.v1, song)
+	sv := song.PopSValue()
+	fmt.Println(sv)
 	return nil
 }
